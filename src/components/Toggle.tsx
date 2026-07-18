@@ -4,9 +4,12 @@ interface ToggleProps {
   checked: boolean;
   onChange: (next: boolean) => void;
   label: string;
+  accent?: "lilac" | "rose";
 }
 
-export default function Toggle({ checked, onChange, label }: ToggleProps) {
+export default function Toggle({ checked, onChange, label, accent = "lilac" }: ToggleProps) {
+  const isRose = accent === "rose";
+
   return (
     <button
       type="button"
@@ -16,7 +19,9 @@ export default function Toggle({ checked, onChange, label }: ToggleProps) {
       onClick={() => onChange(!checked)}
       className={`group relative h-[18px] w-[32px] shrink-0 rounded-full transition-all duration-300 ease-fluid active:scale-90 ${
         checked
-          ? "bg-auri-lilac shadow-[0_0_0_4px_rgba(185,169,217,0.18)]"
+          ? isRose
+            ? "bg-auri-rose animate-glow-pulse-rose"
+            : "bg-auri-lilac shadow-[0_0_0_4px_rgba(185,169,217,0.18)]"
           : "bg-white/15 hover:bg-white/25"
       }`}
     >

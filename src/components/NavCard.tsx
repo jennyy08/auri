@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
+import { hexToRgba } from "../lib/auri-store";
 
 interface NavCardProps {
   to: string;
@@ -19,6 +20,14 @@ const TONE_CLASSES: Record<NonNullable<NavCardProps["tone"]>, string> = {
   rose: "bg-auri-rose",
 };
 
+// the actual hex behind each tone, used only to tint the faint ambient glow
+const TONE_HEX: Record<NonNullable<NavCardProps["tone"]>, string> = {
+  teal: "#5eb8e0",
+  sage: "#7c8f86",
+  slate: "#8a8a94",
+  rose: "#e0776d",
+};
+
 export default function NavCard({
   to,
   title,
@@ -33,7 +42,8 @@ export default function NavCard({
     <button
       type="button"
       onClick={() => router.push(to)}
-      className={`w-full rounded-card ${TONE_CLASSES[tone]} px-4 py-3 text-left transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)] hover:brightness-110 active:translate-y-0 active:scale-[0.98] active:duration-150`}
+      style={{ boxShadow: `0 0 26px -6px ${hexToRgba(TONE_HEX[tone], 0.16)}` }}
+      className={`w-full rounded-card ${TONE_CLASSES[tone]} px-4 py-3 text-left transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.98] active:duration-150`}
     >
       <div className="flex items-center justify-between gap-3">
         <span className="font-display text-[14px] font-bold leading-none text-white">

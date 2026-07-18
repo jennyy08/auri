@@ -46,6 +46,20 @@ export const LED_COLORS: { name: string; hex: string }[] = [
 // preset swatches offered in the sound-edit modal
 export const SOUND_COLOR_PRESETS = LED_COLORS.map((c) => c.hex);
 
+// turns "#e0776d" + 0.15 into "rgba(224,119,109,0.15)" — used for the faint
+// ambient glows that echo a sound/tag's own color
+export function hexToRgba(hex: string, alpha: number): string {
+  const clean = hex.replace("#", "");
+  const full =
+    clean.length === 3
+      ? clean.split("").map((c) => c + c).join("")
+      : clean;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export interface SoundDef {
   id: string;
   name: string;
@@ -240,6 +254,7 @@ interface AuriContextValue {
 
   // history
   logDetection: (soundId: string, space: string) => void;
+  clearHistory: () => void;
 }
 
 const AuriContext = createContext<AuriContextValue | null>(null);
@@ -448,6 +463,10 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const clearHistory = useCallback(() => {
+    setState((prev) => ({ ...prev, history: [] }));
+  }, []);
+
   const value = useMemo<AuriContextValue>(
     () => ({
       sounds: state.sounds,
@@ -477,6 +496,7 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
       updateContact,
       removeContact,
       logDetection,
+      clearHistory,
     }),
     [
       state,
@@ -499,6 +519,7 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
       updateContact,
       removeContact,
       logDetection,
+      clearHistory,
     ]
   );
 

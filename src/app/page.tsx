@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import BatShadows from "../components/BatShadows";
 
 export default function Home() {
   const router = useRouter();
@@ -9,15 +10,22 @@ export default function Home() {
     <button
       type="button"
       onClick={() => router.push("/customize")}
-      className="group relative flex h-full w-full flex-col items-center justify-center bg-auri-black px-8 text-left transition-transform duration-300 ease-fluid active:scale-[0.98]"
+      className="group relative flex h-full w-full flex-col items-center overflow-hidden bg-auri-black px-8 text-left"
       aria-label="Enter auri"
     >
-      <span className="font-display text-[52px] font-extrabold leading-none text-auri-blush transition-all duration-500 ease-fluid group-hover:scale-105 group-hover:drop-shadow-[0_0_24px_rgba(242,217,238,0.35)]">
+      <BatShadows />
+
+      {/* top 1/4 breathing room before the wordmark */}
+      <div className="flex-[1]" />
+
+      <span className="animate-glow-pulse font-display text-[52px] font-extrabold leading-none text-auri-blush transition-transform duration-500 ease-fluid group-hover:scale-105">
         auri
       </span>
-      <span className="absolute bottom-10 left-0 right-0 text-center text-[11px] font-normal tracking-wide text-white/50 transition-colors duration-300 group-hover:text-white/80">
+      <span className="mt-3 text-center text-[11px] font-normal tracking-wide text-white/50 transition-colors duration-300 group-hover:text-white/80">
         sound &rarr; sensation
       </span>
+
+      <div className="flex-[3]" />
     </button>
   );
 }

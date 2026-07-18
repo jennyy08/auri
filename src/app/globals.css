@@ -89,3 +89,63 @@ button:disabled {
 .phone-scroll > div {
   animation: auri-fade-up 320ms var(--ease-fluid) both;
 }
+
+/* a slow, ambient breathing glow — used sparingly on hero/accent moments */
+@keyframes auri-glow-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 16px rgba(242, 217, 238, 0.25));
+  }
+  50% {
+    filter: drop-shadow(0 0 34px rgba(242, 217, 238, 0.5));
+  }
+}
+.animate-glow-pulse {
+  animation: auri-glow-pulse 3.4s var(--ease-fluid) infinite;
+}
+
+@keyframes auri-glow-pulse-rose {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(224, 119, 109, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(224, 119, 109, 0.32);
+  }
+}
+.animate-glow-pulse-rose {
+  animation: auri-glow-pulse-rose 2.6s var(--ease-fluid) infinite;
+}
+
+/* a quick, one-shot brightening flash for success confirmations */
+@keyframes auri-success-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(94, 184, 224, 0.5);
+  }
+  60% {
+    box-shadow: 0 0 24px 4px rgba(94, 184, 224, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(94, 184, 224, 0);
+  }
+}
+.animate-success-flash {
+  animation: auri-success-flash 900ms var(--ease-fluid) both;
+}
+
+/* very slow, very subtle drift for background silhouettes */
+@keyframes auri-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(6px, -10px) rotate(2deg);
+  }
+}
+.animate-drift-slow {
+  animation: auri-drift 10s ease-in-out infinite;
+}
+.animate-drift-slower {
+  animation: auri-drift 14s ease-in-out infinite reverse;
+}

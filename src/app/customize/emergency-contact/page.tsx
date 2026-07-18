@@ -103,13 +103,19 @@ export default function EmergencyContact() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-auri-black px-5 pb-6 pt-8">
+    <div className="relative flex h-full w-full flex-col bg-auri-black px-5 pb-6 pt-8">
+      {/* ambient rose glow, echoing the emergency-contact nav card color */}
+      <div
+        className="pointer-events-none absolute -right-16 -top-10 h-56 w-56 rounded-full bg-auri-rose/25 blur-[70px]"
+        aria-hidden
+      />
+
       <ScreenHeader
         title="emergency contact"
         subtitle="automatically notify a trusted contact if an urgent sound is detected more than once"
       />
 
-      <div className="mb-4 flex items-start justify-between gap-3 rounded-card bg-white/5 px-4 py-3 transition-colors duration-300 hover:bg-white/[0.07]">
+      <div className="relative mb-4 flex items-start justify-between gap-3 rounded-card bg-white/5 px-4 py-3 transition-colors duration-300 hover:bg-white/[0.07]">
         <div className="flex-1">
           <p className="font-display text-[13px] font-bold leading-snug text-white">
             {draft.enabled ? (
@@ -143,6 +149,7 @@ export default function EmergencyContact() {
           checked={draft.enabled}
           onChange={handleToggleEnabled}
           label="Emergency contact enabled"
+          accent="rose"
         />
       </div>
 
@@ -163,7 +170,7 @@ export default function EmergencyContact() {
                 onClick={() => patch({ method: m })}
                 className={`rounded-full px-3 py-1 text-[10px] font-normal transition-all duration-200 ease-fluid hover:-translate-y-px active:translate-y-0 active:scale-95 ${
                   draft.method === m
-                    ? "bg-white text-auri-black shadow-[0_0_0_3px_rgba(255,255,255,0.08)]"
+                    ? "bg-auri-rose text-white shadow-[0_0_0_3px_rgba(224,119,109,0.25)]"
                     : "bg-white/10 text-white/70 hover:bg-white/15"
                 }`}
               >
@@ -246,14 +253,14 @@ export default function EmergencyContact() {
         </div>
       </div>
 
-      <div className="mt-5 flex flex-col gap-2">
+      <div className="relative mt-5 flex flex-col gap-2">
         <button
           type="button"
           onClick={handleSave}
           className={`w-full rounded-full py-2 text-[12px] font-bold transition-all duration-200 ease-fluid hover:-translate-y-px active:translate-y-0 active:scale-[0.97] ${
             justSaved
-              ? "bg-auri-highlight text-auri-black"
-              : "bg-white text-auri-black hover:shadow-[0_4px_20px_-4px_rgba(255,255,255,0.35)]"
+              ? "animate-success-flash bg-auri-rose text-white"
+              : "bg-white text-auri-black hover:shadow-[0_4px_20px_-4px_rgba(224,119,109,0.45)]"
           }`}
         >
           {justSaved ? "saved ✓" : "save"}

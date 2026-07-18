@@ -10,6 +10,7 @@ import {
   NOTIFY_LEVEL_META,
   VIBRATION_SPEEDS,
   VIBRATION_STRENGTHS,
+  hexToRgba,
   useAuriStore,
   type Classification,
   type NotifyLevel,
@@ -107,6 +108,7 @@ export default function SoundSelection() {
                   setEditingId(sound.id);
                 }
               }}
+              style={{ boxShadow: `0 0 30px -14px ${hexToRgba(sound.color, 0.5)}` }}
               className={`cursor-pointer rounded-card bg-white/5 px-4 py-3 transition-all duration-300 ease-fluid hover:bg-white/[0.07] ${
                 active ? "" : "opacity-50"
               }`}
@@ -115,7 +117,10 @@ export default function SoundSelection() {
                 <div className="flex items-center gap-2.5">
                   <span
                     className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: sound.color }}
+                    style={{
+                      backgroundColor: sound.color,
+                      boxShadow: `0 0 8px 1px ${hexToRgba(sound.color, 0.7)}`,
+                    }}
                   />
                   <span className="font-display text-[13px] font-bold text-white">
                     {sound.name}
@@ -152,8 +157,12 @@ export default function SoundSelection() {
                     e.stopPropagation();
                     setSoundClassification(sound.id, cycleClassification(sound.classification));
                   }}
+                  style={{
+                    backgroundColor: meta.color,
+                    color: meta.textColor,
+                    boxShadow: `0 0 10px -1px ${hexToRgba(meta.color, 0.6)}`,
+                  }}
                   className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide transition-transform duration-200 ease-spring hover:scale-110 active:scale-95"
-                  style={{ backgroundColor: meta.color, color: meta.textColor }}
                 >
                   {meta.label}
                 </button>
@@ -194,6 +203,7 @@ export default function SoundSelection() {
                   backgroundColor: CLASSIFICATION_META[c].color,
                   color: CLASSIFICATION_META[c].textColor,
                   opacity: newClassification === c ? 1 : 0.4,
+                  boxShadow: `0 0 10px -1px ${hexToRgba(CLASSIFICATION_META[c].color, 0.6)}`,
                 }}
               >
                 {CLASSIFICATION_META[c].label}
@@ -274,6 +284,7 @@ export default function SoundSelection() {
                       className="block h-6 w-6 rounded-full transition-transform duration-200 ease-spring hover:scale-[1.15] active:scale-90"
                       style={{
                         backgroundColor: hex,
+                        boxShadow: `0 0 10px -1px ${hexToRgba(hex, 0.6)}`,
                         outline:
                           editingSound.color === hex ? "2px solid white" : "2px solid transparent",
                         outlineOffset: "2px",

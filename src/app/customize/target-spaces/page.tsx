@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ScreenHeader from "../../../components/ScreenHeader";
 import { Chip, AddChip } from "../../../components/Chip";
-import { useAuriStore } from "../../../lib/auri-store";
+import { hexToRgba, useAuriStore } from "../../../lib/auri-store";
 
 export default function TargetSpaces() {
   const {
@@ -46,6 +46,9 @@ export default function TargetSpaces() {
                   e.preventDefault();
                   setActiveSpace(space.id);
                 }
+              }}
+              style={{
+                boxShadow: `0 0 24px -8px ${hexToRgba(isCustom ? "#b9a9d9" : "#5eb8e0", 0.18)}`,
               }}
               className={`cursor-pointer rounded-card px-4 py-3 text-left transition-all duration-300 ease-fluid hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] ${
                 isActive
