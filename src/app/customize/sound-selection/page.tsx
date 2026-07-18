@@ -18,6 +18,7 @@ import {
 } from "../../../lib/auri-store";
 
 const NOTIFY_LEVELS: NotifyLevel[] = ["all", "emergency-important", "emergency-only"];
+const FILTER_OPTIONS: ("all" | Classification)[] = ["all", ...CLASSIFICATIONS];
 
 export default function SoundSelection() {
   const {
@@ -38,6 +39,7 @@ export default function SoundSelection() {
   const [newName, setNewName] = useState("");
   const [newClassification, setNewClassification] = useState<Classification>("important");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | Classification>("all");
 
   function handleAddSound() {
     if (!newName.trim()) return;
@@ -47,12 +49,9 @@ export default function SoundSelection() {
     setShowAdd(false);
   }
 
-  function cycleClassification(current: Classification): Classification {
-    const idx = CLASSIFICATIONS.indexOf(current);
-    return CLASSIFICATIONS[(idx + 1) % CLASSIFICATIONS.length];
-  }
-
   const editingSound: SoundDef | undefined = sounds.find((s) => s.id === editingId);
+  const visibleSounds =
+    filter === "all" ? sounds : sounds.filter((s) => s.classification === filter);
 
   return (
     <div className="relative flex h-full w-full flex-col bg-auri-black px-5 pb-6 pt-8">
@@ -90,12 +89,52 @@ export default function SoundSelection() {
         </p>
       </div>
 
+      {/* filter the list by tag — purely a display filter, doesn't touch notify settings */}
+      <p className="mb-1.5 text-[10px] font-semibold text-auri-muted">filter by:</p>
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {FILTER_OPTIONS.map((f) => {
+          const active = filter === f;
+          const meta = f === "all" ? null : CLASSIFICATION_META[f];
+          return (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide transition-all duration-200 ease-fluid hover:scale-105"
+              style={
+                meta
+                  ? {
+                      backgroundColor: meta.color,
+                      color: meta.textColor,
+                      opacity: active ? 1 : 0.35,
+                      boxShadow: active
+                        ? `0 0 10px -1px ${hexToRgba(meta.color, 0.6)}`
+                        : "none",
+                    }
+                  : {
+                      backgroundColor: active ? "#ffffff" : "rgba(255,255,255,0.08)",
+                      color: active ? "#050505" : "rgba(255,255,255,0.6)",
+                    }
+              }
+            >
+              {meta && <span aria-hidden>{meta.icon}</span>}
+              {meta ? meta.label : "all"}
+            </button>
+          );
+        })}
+      </div>
+
       <p className="mb-2 text-[9px] font-normal text-auri-muted">
         tap a sound to edit its vibration &amp; color
       </p>
 
       <div className="space-y-2.5">
-        {sounds.map((sound) => {
+        {visibleSounds.length === 0 && (
+          <p className="rounded-card bg-white/5 px-4 py-3 text-center text-[10px] font-normal text-white/40">
+            no sounds match this filter
+          </p>
+        )}
+        {visibleSounds.map((sound) => {
           const meta = CLASSIFICATION_META[sound.classification];
           const active = willNotify(sound);
           return (
@@ -153,22 +192,17 @@ export default function SoundSelection() {
               </div>
 
               <div className="mt-2 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSoundClassification(sound.id, cycleClassification(sound.classification));
-                  }}
+                <span
                   style={{
                     backgroundColor: meta.color,
                     color: meta.textColor,
                     boxShadow: `0 0 10px -1px ${hexToRgba(meta.color, 0.6)}`,
                   }}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide transition-transform duration-200 ease-spring hover:scale-110 active:scale-95"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide"
                 >
                   <span aria-hidden>{meta.icon}</span>
                   {meta.label}
-                </button>
+                </span>
                 <span className="text-[9px] font-normal capitalize text-white/40">
                   {sound.vibrationStrength} · {sound.vibrationSpeed}
                 </span>
@@ -362,6 +396,51 @@ export default function SoundSelection() {
                 </p>
               )}
             </div>
+
+            <div>
+              <p className="mb-1.5 text-[10px] font-bold text-auri-muted">
+                tag
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {CLASSIFICATIONS.map((c) => {
+                  const cMeta = CLASSIFICATION_META[c];
+                  const active = editingSound.classification === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setSoundClassification(editingSound.id, c)}
+                      style={{
+                        backgroundColor: cMeta.color,
+                        color: cMeta.textColor,
+                        opacity: active ? 1 : 0.4,
+                        boxShadow: active
+                          ? `0 0 10px -1px ${hexToRgba(cMeta.color, 0.6)}`
+                          : "none",
+                      }}
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide transition-all duration-200 ease-fluid hover:scale-105"
+                    >
+                      <span aria-hidden>{cMeta.icon}</span>
+                      {cMeta.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-1.5 text-[9px] font-normal leading-snug text-auri-muted">
+                {CLASSIFICATION_META[editingSound.classification].experience}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                removeSound(editingSound.id);
+                setEditingId(null);
+              }}
+              className="w-full rounded-full bg-auri-rose/20 py-1.5 text-[11px] font-bold text-auri-rose ring-1 ring-auri-rose/40 transition-all duration-200 ease-fluid hover:bg-auri-rose/30 active:scale-95"
+            >
+              delete sound
+            </button>
 
             <button
               type="button"

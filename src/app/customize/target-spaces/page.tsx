@@ -21,12 +21,27 @@ export default function TargetSpaces() {
     return sounds.find((s) => s.id === id)?.name ?? id;
   }
 
+  const activeSpace = spaces.find((s) => s.id === activeSpaceId);
+
   return (
     <div className="flex h-full w-full flex-col bg-auri-black px-5 pb-6 pt-8">
       <ScreenHeader
         title="target spaces"
-        subtitle="prioritize sound detection based on your location *note: emergency sounds will be played regardless of selection"
+        subtitle="filter sounds based on your location *note: emergency sounds will be played regardless of selection"
       />
+
+      {activeSpace && (
+        <div className="mb-3 rounded-card bg-auri-highlight/10 px-3 py-2.5 ring-1 ring-auri-highlight/25">
+          <p className="text-[10px] font-normal leading-snug text-white/75">
+            you&apos;re set to{" "}
+            <span className="font-bold text-auri-highlight">
+              {activeSpace.name}
+            </span>{" "}
+            — auri will only filter for the sounds listed below while
+            you&apos;re here.
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         {spaces.map((space) => {

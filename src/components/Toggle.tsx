@@ -5,9 +5,16 @@ interface ToggleProps {
   onChange: (next: boolean) => void;
   label: string;
   accent?: "lilac" | "rose";
+  disabled?: boolean;
 }
 
-export default function Toggle({ checked, onChange, label, accent = "lilac" }: ToggleProps) {
+export default function Toggle({
+  checked,
+  onChange,
+  label,
+  accent = "lilac",
+  disabled = false,
+}: ToggleProps) {
   const isRose = accent === "rose";
 
   return (
@@ -16,8 +23,12 @@ export default function Toggle({ checked, onChange, label, accent = "lilac" }: T
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      onClick={() => onChange(!checked)}
+      aria-disabled={disabled}
+      disabled={disabled}
+      onClick={() => !disabled && onChange(!checked)}
       className={`group relative h-[18px] w-[32px] shrink-0 rounded-full transition-all duration-300 ease-fluid active:scale-90 ${
+        disabled ? "cursor-not-allowed opacity-40" : ""
+      } ${
         checked
           ? isRose
             ? "bg-auri-rose animate-glow-pulse-rose"

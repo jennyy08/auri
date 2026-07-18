@@ -43,7 +43,7 @@ export default function Customize() {
           to="/customize/target-spaces"
           tone="teal"
           title="target space"
-          subtitle="prioritize sounds"
+          subtitle="filter sounds based on your location"
           trailing={<span className="text-[13px] text-white/70">home</span>}
         />
 
