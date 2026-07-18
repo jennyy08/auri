@@ -48,13 +48,41 @@ postcss.config.js       # Tailwind v4 PostCSS plugin
     and a **save** button that persists your settings (shared store +
     localStorage) with a "saved ✓" confirmation.
   - **Call now / text now** buttons on each contact use `tel:` / `sms:`
-    links, which hand off to the phone's real dialer/messaging app — the
-    same thing that would fire automatically once the threshold is hit.
-    A **"send test alert now"** button simulates that automatic trigger for
-    your primary contact. True unattended/background calling (without the
-    person tapping anything) needs a server-side telephony service such as
-    Twilio, since a browser page can't place calls on its own — this is the
-    closest a client-only app can get to "actually contacting them."
+    links, which hand off to the phone's real dialer/messaging app — a
+    manual "reach them yourself right now" shortcut.
+  - **"send test alert now"** hits a real backend route
+    (`src/app/api/emergency-alert/route.ts`) that uses **Twilio** to
+    actually send a text or place a call with no one touching their
+    phone — this is the same thing that would fire automatically once
+    the detection threshold is hit. If Twilio isn't configured yet, the
+    button falls back to opening the phone's own call/text app instead,
+    so it still does something, and it tells you why.
+
+### Setting up real automatic texts/calls (Twilio)
+
+The browser itself can never send a text or place a call on its own — that's
+a hard security restriction all browsers share. To actually notify someone
+without a person tapping anything, you need a small server-side piece
+that's allowed to do that on your behalf. This project uses **Twilio**:
+
+1. `npm install twilio`
+2. Sign up at [twilio.com/try-twilio](https://www.twilio.com/try-twilio) —
+   the free trial gives you a phone number and some credit to start.
+3. Copy `.env.example` to `.env.local` and fill in the three values from
+   your Twilio console (Account SID, Auth Token, and the phone number
+   Twilio gave you).
+4. Restart `npm run dev` (env vars are only read at startup).
+5. On a **free trial**, Twilio will only let you text/call numbers you've
+   manually verified in Console → Phone Numbers → Verified Caller IDs.
+   Upgrading to a paid account removes that restriction.
+
+Once those env vars are set, "send test alert now" will actually text or
+call your primary contact for real. The API route itself
+(`src/app/api/emergency-alert/route.ts`) is a normal Next.js route handler,
+so it'll work as-is once merged into your project — just make sure your
+Twilio credentials only ever live in `.env.local` (server-side), never in
+any client component.
+
 - **History** now pulls sound names/classification from the shared sound
   list, and new detections (e.g. from a test alert) are logged live.
 - All of this state lives in `lib/auri-store.tsx` and is saved to
@@ -70,19 +98,26 @@ it's no longer used anywhere.
 
 1. Copy `src/app/*` and `src/components/*` into your project's `src/`
    (merge `globals.css` with your existing one rather than overwriting it,
-   if you've already customized it).
+   if you've already customized it). This includes
+   `src/app/api/emergency-alert/route.ts`, the backend route that sends
+   real texts/calls via Twilio.
 2. Replace your root `postcss.config.js` with the one here — it fixes the
    `@tailwindcss/postcss` error from Tailwind v4.
-3. Make sure `@tailwindcss/postcss` is installed:
+3. Make sure `@tailwindcss/postcss` and `twilio` are installed:
    ```
    npm install -D @tailwindcss/postcss
+   npm install twilio
    ```
-4. You can remove `react-router-dom` if you'd installed it for the previous
+4. Copy `.env.example` to `.env.local` in your project root and fill in
+   your real Twilio credentials (see "Setting up real automatic
+   texts/calls" below) — without this, the emergency-contact test alert
+   just falls back to opening the phone's own call/text app.
+5. You can remove `react-router-dom` if you'd installed it for the previous
    version of this:
    ```
    npm uninstall react-router-dom
    ```
-5. `npm run dev`.
+6. `npm run dev`.
 
 ## How the scaling works
 

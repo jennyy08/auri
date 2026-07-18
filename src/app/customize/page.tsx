@@ -18,17 +18,24 @@ export default function Customize() {
     userName,
     setUserName,
   } = useAuriStore();
+
   const activeSpaceName =
     spaces.find((s) => s.id === activeSpaceId)?.name || "home";
 
   return (
     <div className="relative isolate flex h-full w-full flex-col bg-auri-black px-5 pb-6 pt-8">
       <BatShadows />
-      <h1 className="font-display text-xl font-bold text-white">
-        customize
-      </h1>
 
-      <div className="mt-4 rounded-card bg-white/5 px-4 py-3">
+    <h1 className="mt-1 flex items-center justify-center gap-2">
+      <span className="font-display text-xl font-bold text-white">
+        auri
+      </span>
+      <span className="mt-[2px] font-sans text-[10px] font-semibold tracking-wide text-auri-muted">
+        <span className="text-[#C58A96]">feel</span> the aura
+      </span>
+    </h1>
+
+      <div className="mt-3 rounded-card bg-white/5 px-4 py-3">
         <label
           htmlFor="user-name"
           className="mb-1.5 block text-[10px] font-bold text-auri-muted"
@@ -48,7 +55,7 @@ export default function Customize() {
       </div>
 
       <div className="mt-4 space-y-3">
-        <div className="group flex items-start gap-2.5 rounded-card px-2 py-1.5 -mx-2 transition-colors duration-200 hover:bg-white/5">
+        <div className="group -mx-2 flex items-start gap-2.5 rounded-card px-2 py-1.5 transition-colors duration-200 hover:bg-white/5">
           <Toggle checked={haptics} onChange={setHaptics} label="Haptics" />
           <div>
             <p className="font-display text-[12px] font-bold text-white">
@@ -60,7 +67,7 @@ export default function Customize() {
           </div>
         </div>
 
-        <div className="group flex items-start gap-2.5 rounded-card px-2 py-1.5 -mx-2 transition-colors duration-200 hover:bg-white/5">
+        <div className="group -mx-2 flex items-start gap-2.5 rounded-card px-2 py-1.5 transition-colors duration-200 hover:bg-white/5">
           <Toggle checked={lights} onChange={setLights} label="Lights" />
           <div>
             <p className="font-display text-[12px] font-bold text-white">
@@ -79,7 +86,11 @@ export default function Customize() {
           tone="teal"
           title="target space"
           subtitle="filter sounds by location"
-          trailing={<span className="text-[11px] font-normal text-white/70">{activeSpaceName}</span>}
+          trailing={
+            <span className="text-[11px] font-normal text-white/70">
+              {activeSpaceName}
+            </span>
+          }
         />
 
         <NavCard

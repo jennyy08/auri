@@ -52,6 +52,10 @@ export default function EmergencyContact() {
   const [dirty, setDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [justTested, setJustTested] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [testFeedback, setTestFeedback] = useState<{ kind: "sent" | "fallback" | "error"; text: string } | null>(
+    null
+  );
   // true the moment someone flips the switch on but hasn't filled in a
   // contact yet — the switch shows "on" and the contact boxes highlight,
   // but nothing is actually saved as enabled until a contact lands
@@ -181,16 +185,49 @@ export default function EmergencyContact() {
     setTimeout(() => setJustSaved(false), 2500);
   }
 
-  function sendTestAlert() {
-    if (!primary) return;
+  async function sendTestAlert() {
+    if (!primary || sending) return;
     const message = `this is a test alert from auri — an emergency sound was detected ${draft.times}+ times in ${draft.minutes} minutes.`;
-    logDetection("smoke-alarm", "home");
-    setJustTested(true);
-    setTimeout(() => setJustTested(false), 2500);
-    if (draft.method === "call") {
-      window.location.href = telHref(primary.number);
-    } else {
-      window.location.href = smsHref(primary.number, message);
+
+    setSending(true);
+    setTestFeedback(null);
+
+    try {
+      const res = await fetch("/api/emergency-alert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: primary.number, method: draft.method, message }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data?.error || "the alert service couldn't send it");
+
+      logDetection("smoke-alarm", "home");
+      setJustTested(true);
+      setTestFeedback({
+        kind: "sent",
+        text: `sent for real via Twilio — ${methodLabel(draft.method)} delivered to ${primary.name || "your contact"}.`,
+      });
+      setTimeout(() => setJustTested(false), 2500);
+    } catch (err) {
+      // couldn't send automatically (most likely Twilio isn't configured
+      // in this environment yet) — fall back to opening the phone's own
+      // call/text app so tapping the button still does *something*.
+      logDetection("smoke-alarm", "home");
+      setJustTested(true);
+      setTestFeedback({
+        kind: "error",
+        text: err instanceof Error ? err.message : "the alert service couldn't send it",
+      });
+      setTimeout(() => setJustTested(false), 2500);
+      if (draft.method === "call") {
+        window.location.href = telHref(primary.number);
+      } else {
+        window.location.href = smsHref(primary.number, message);
+      }
+    } finally {
+      setSending(false);
+      setTimeout(() => setTestFeedback(null), 7000);
     }
   }
 
@@ -381,18 +418,48 @@ export default function EmergencyContact() {
           {justSaved ? "saved ✓" : "save"}
         </button>
 
-        <button
-          type="button"
-          onClick={sendTestAlert}
-          disabled={!draft.enabled || !primary}
-          className="w-full rounded-full bg-white/10 py-2 text-[12px] font-bold text-white/80 transition-all duration-200 ease-fluid hover:-translate-y-px hover:bg-white/20 active:translate-y-0 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0"
-        >
-          {justTested ? "test alert sent ✓" : "send test alert now"}
-        </button>
+        {(() => {
+          const disabledReason = !draft.enabled
+            ? "turn on the \"emergency contact\" switch above to enable this."
+            : !primary
+            ? "add a contact with a name and a valid phone number, then save, to enable this."
+            : null;
+          return (
+            <button
+              type="button"
+              onClick={sendTestAlert}
+              disabled={!draft.enabled || !primary || sending}
+              title={disabledReason ?? undefined}
+              className="w-full rounded-full bg-white/10 py-2 text-[12px] font-bold text-white/80 transition-all duration-200 ease-fluid hover:-translate-y-px hover:bg-white/20 active:translate-y-0 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0"
+            >
+              {sending ? "sending…" : justTested ? "test alert sent ✓" : "send test alert now"}
+            </button>
+          );
+        })()}
+
+        {(!draft.enabled || !primary) && (
+          <p className="text-center text-[9px] font-semibold leading-snug text-auri-rose">
+            {!draft.enabled
+              ? "turn on the emergency contact switch above to enable the test alert button."
+              : "add a contact with a name and a valid phone number, then hit save, to enable the test alert button."}
+          </p>
+        )}
+
+        {testFeedback && (
+          <p
+            className={`text-center text-[9px] font-normal leading-snug ${
+              testFeedback.kind === "sent" ? "text-auri-sage" : "text-auri-rose"
+            }`}
+          >
+            {testFeedback.kind === "sent"
+              ? testFeedback.text
+              : `couldn't send automatically — opened your phone's app instead. (${testFeedback.text})`}
+          </p>
+        )}
 
         <p className="text-center text-[9px] font-normal leading-snug text-auri-muted">
           {primary
-            ? "\"send test alert\" opens your phone's call or messages app to actually reach your primary contact — the same action auri triggers automatically once the threshold above is hit."
+            ? "\"send test alert\" tries to send a real text/call automatically through your Twilio backend. If Twilio isn't set up yet, it opens your phone's call or messages app instead so you can send it yourself."
             : "add a contact with a name and number to enable real call/text alerts."}
         </p>
       </div>
