@@ -103,6 +103,10 @@ export interface SoundDef {
   custom?: boolean;
 }
 
+// "name call" needs to know the user's actual name before it can mean
+// anything — referenced by id wherever that dependency has to be checked.
+export const NAME_CALL_SOUND_ID = "name-call";
+
 export type NotifyLevel = "all" | "emergency-important" | "emergency-only";
 
 export const NOTIFY_LEVEL_META: Record<
@@ -159,6 +163,7 @@ interface AuriState {
   history: HistoryEntry[];
   haptics: boolean;
   lights: boolean;
+  userName: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -172,12 +177,16 @@ const DEFAULT_SOUNDS: SoundDef[] = [
   { id: "smoke-alarm", name: "smoke alarm", enabled: true, classification: "emergency", color: "#e0776d", vibrationStrength: "strong", vibrationSpeed: "fast" },
   { id: "car-horn", name: "car horn", enabled: false, classification: "informational", color: "#f5f5f2", vibrationStrength: "light", vibrationSpeed: "slow" },
   { id: "bicycle-bell", name: "bicycle bell", enabled: true, classification: "informational", color: "#5eb8e0", vibrationStrength: "light", vibrationSpeed: "slow" },
+  // enabled starts false — can't mean anything until a name is set (see
+  // NAME_CALL_SOUND_ID guard in toggleSound below)
+  { id: NAME_CALL_SOUND_ID, name: "name call", enabled: false, classification: "important", color: "#5eb8e0", vibrationStrength: "medium", vibrationSpeed: "fast" },
+  { id: "emergency-siren", name: "emergency siren", enabled: true, classification: "emergency", color: "#e0776d", vibrationStrength: "strong", vibrationSpeed: "fast" },
 ];
 
 const DEFAULT_SPACES: Space[] = [
-  { id: "home", name: "home", soundIds: ["baby-crying", "dog-bark", "door-knock", "smoke-alarm"] },
+  { id: "home", name: "home", soundIds: ["baby-crying", "dog-bark", "door-knock", "smoke-alarm", "emergency-siren"] },
   { id: "outdoor", name: "outdoor", soundIds: ["car-horn", "dog-bark", "bicycle-bell"] },
-  { id: "sleep", name: "sleep", soundIds: ["smoke-alarm"] },
+  { id: "sleep", name: "sleep", soundIds: ["smoke-alarm", "emergency-siren"] },
   { id: "custom", name: "custom", soundIds: [] },
 ];
 
@@ -208,6 +217,7 @@ const DEFAULT_STATE: AuriState = {
   history: DEFAULT_HISTORY,
   haptics: true,
   lights: true,
+  userName: "",
 };
 
 const STORAGE_KEY = "auri-state-v2";
@@ -258,12 +268,15 @@ function loadInitialState(): AuriState {
     const spaces: Space[] = parsed.spaces ?? DEFAULT_SPACES;
     const hasCustom = spaces.some((sp: Space) => sp.id === "custom");
     // shallow-merge so new fields introduced later don't break old saves
+    const savedSounds: SoundDef[] = parsed.sounds ?? DEFAULT_SOUNDS;
+    const savedIds = new Set(savedSounds.map((s: SoundDef) => s.id));
+    const missingPresets = DEFAULT_SOUNDS.filter((s) => !savedIds.has(s.id));
     return {
       ...DEFAULT_STATE,
       ...parsed,
       notifyLevel: migrateNotifyLevel(parsed.notifyLevel),
       spaces: hasCustom ? spaces : [...spaces, { id: "custom", name: "custom", soundIds: [] }],
-      sounds: (parsed.sounds ?? DEFAULT_SOUNDS).map((s: SoundDef) => ({
+      sounds: [...savedSounds, ...missingPresets].map((s: SoundDef) => ({
         ...s,
         classification: migrateClassification(s.classification),
         vibrationStrength: s.vibrationStrength ?? "medium",
@@ -287,11 +300,13 @@ interface AuriContextValue {
   activeSpaceId: string;
   emergency: EmergencySettings;
   history: HistoryEntry[];
+  userName: string;
+  setUserName: (name: string) => void;
 
   // sounds
   addSound: (name: string, classification: Classification) => SoundDef;
   removeSound: (id: string) => void;
-  toggleSound: (id: string) => void;
+  toggleSound: (id: string) => boolean;
   setSoundClassification: (id: string, classification: Classification) => void;
   updateSoundSettings: (
     id: string,
@@ -386,12 +401,21 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const toggleSound = useCallback((id: string) => {
-    setState((prev) => ({
-      ...prev,
-      sounds: prev.sounds.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)),
-    }));
-  }, []);
+  const toggleSound = useCallback(
+    (id: string) => {
+      const sound = state.sounds.find((s) => s.id === id);
+      if (sound && id === NAME_CALL_SOUND_ID && !sound.enabled && !state.userName.trim()) {
+        // blocked — no name set yet, nothing to detect against
+        return false;
+      }
+      setState((prev) => ({
+        ...prev,
+        sounds: prev.sounds.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)),
+      }));
+      return true;
+    },
+    [state.sounds, state.userName]
+  );
 
   const setSoundClassification = useCallback(
     (id: string, classification: Classification) => {
@@ -463,6 +487,26 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
   const setActiveSpace = useCallback((spaceId: string) => {
     setState((prev) => ({ ...prev, activeSpaceId: spaceId }));
   }, []);
+
+  const setUserName = useCallback((name: string) => {
+    setState((prev) => ({ ...prev, userName: name }));
+  }, []);
+
+  // if the name gets cleared out after being set, name call can't mean
+  // anything anymore — turn it back off rather than leave a stale "on"
+  useEffect(() => {
+    if (!hydrated || state.userName.trim()) return;
+    setState((prev) => {
+      const target = prev.sounds.find((s) => s.id === NAME_CALL_SOUND_ID);
+      if (!target || !target.enabled) return prev;
+      return {
+        ...prev,
+        sounds: prev.sounds.map((s) =>
+          s.id === NAME_CALL_SOUND_ID ? { ...s, enabled: false } : s
+        ),
+      };
+    });
+  }, [state.userName, hydrated]);
 
   const setHaptics = useCallback((on: boolean) => {
     setState((prev) => ({ ...prev, haptics: on }));
@@ -545,6 +589,8 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
       history: state.history,
       haptics: state.haptics,
       lights: state.lights,
+      userName: state.userName,
+      setUserName,
       setHaptics,
       setLights,
       addSound,
@@ -568,6 +614,7 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
+      setUserName,
       addSound,
       removeSound,
       toggleSound,

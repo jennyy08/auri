@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import ScreenHeader from "../../../components/ScreenHeader";
 import Toggle from "../../../components/Toggle";
 import {
   CLASSIFICATIONS,
   CLASSIFICATION_META,
   LED_COLORS,
+  NAME_CALL_SOUND_ID,
   NOTIFY_LEVEL_META,
   VIBRATION_SPEEDS,
   VIBRATION_STRENGTHS,
@@ -21,6 +23,7 @@ const NOTIFY_LEVELS: NotifyLevel[] = ["all", "emergency-important", "emergency-o
 const FILTER_OPTIONS: ("all" | Classification)[] = ["all", ...CLASSIFICATIONS];
 
 export default function SoundSelection() {
+  const router = useRouter();
   const {
     sounds,
     notifyLevel,
@@ -33,6 +36,7 @@ export default function SoundSelection() {
     willNotify,
     haptics,
     lights,
+    userName,
   } = useAuriStore();
 
   const [showAdd, setShowAdd] = useState(false);
@@ -40,6 +44,48 @@ export default function SoundSelection() {
   const [newClassification, setNewClassification] = useState<Classification>("important");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | Classification>("all");
+  const [nameCallNotice, setNameCallNotice] = useState(false);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const [modalRect, setModalRect] = useState<{ top: number; height: number } | null>(null);
+
+  // the page itself sits inside a scrollable "phone screen" container, so a
+  // plain inset-0 overlay always anchors to the top of that container's
+  // content rather than whatever part of it the person is currently
+  // scrolled to. capture the container's current scroll position/height
+  // when the modal opens (and keep it in sync if the person resizes or
+  // keeps scrolling) so the popup always shows up centered in view.
+  function getScrollContainer() {
+    return pageRef.current?.closest(".phone-scroll") as HTMLElement | null;
+  }
+
+  function openEditor(id: string) {
+    setEditingId(id);
+    const el = getScrollContainer();
+    setModalRect(el ? { top: el.scrollTop, height: el.clientHeight } : null);
+  }
+
+  useEffect(() => {
+    if (!editingId) return;
+    const el = getScrollContainer();
+    if (!el) return;
+    const update = () => setModalRect({ top: el.scrollTop, height: el.clientHeight });
+    el.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingId]);
+
+  function handleToggleSound(sound: SoundDef) {
+    if (sound.id === NAME_CALL_SOUND_ID && !sound.enabled && !userName.trim()) {
+      setNameCallNotice(true);
+      return;
+    }
+    setNameCallNotice(false);
+    toggleSound(sound.id);
+  }
 
   function handleAddSound() {
     if (!newName.trim()) return;
@@ -50,11 +96,14 @@ export default function SoundSelection() {
   }
 
   const editingSound: SoundDef | undefined = sounds.find((s) => s.id === editingId);
-  const visibleSounds =
-    filter === "all" ? sounds : sounds.filter((s) => s.classification === filter);
+  const visibleSounds = (
+    filter === "all" ? sounds : sounds.filter((s) => s.classification === filter)
+  )
+    .slice()
+    .sort((a, b) => Number(b.enabled) - Number(a.enabled));
 
   return (
-    <div className="relative flex h-full w-full flex-col bg-auri-black px-5 pb-6 pt-8">
+    <div ref={pageRef} className="relative flex h-full w-full flex-col bg-auri-black px-5 pb-6 pt-8">
       <ScreenHeader
         title="sound selection"
         subtitle="choose & classify which sounds auri should detect"
@@ -76,7 +125,7 @@ export default function SoundSelection() {
               } font-normal ${
                 notifyLevel === level
                   ? "bg-white text-auri-black shadow-[0_0_0_3px_rgba(255,255,255,0.08)]"
-                  : "bg-white/10 text-white/70 hover:bg-white/15"
+                  : "bg-white/12 text-white/80 hover:bg-white/20"
               }`}
             >
               {NOTIFY_LEVEL_META[level].label}
@@ -106,14 +155,14 @@ export default function SoundSelection() {
                   ? {
                       backgroundColor: meta.color,
                       color: meta.textColor,
-                      opacity: active ? 1 : 0.35,
+                      opacity: active ? 1 : 0.5,
                       boxShadow: active
                         ? `0 0 10px -1px ${hexToRgba(meta.color, 0.6)}`
                         : "none",
                     }
                   : {
-                      backgroundColor: active ? "#ffffff" : "rgba(255,255,255,0.08)",
-                      color: active ? "#050505" : "rgba(255,255,255,0.6)",
+                      backgroundColor: active ? "#ffffff" : "rgba(255,255,255,0.12)",
+                      color: active ? "#050505" : "rgba(255,255,255,0.75)",
                     }
               }
             >
@@ -140,18 +189,18 @@ export default function SoundSelection() {
           return (
             <div
               key={sound.id}
-              onClick={() => setEditingId(sound.id)}
+              onClick={() => openEditor(sound.id)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  setEditingId(sound.id);
+                  openEditor(sound.id);
                 }
               }}
               style={{ boxShadow: `0 0 20px -16px ${hexToRgba(sound.color, 0.15)}` }}
               className={`cursor-pointer rounded-card bg-white/5 px-4 py-3 transition-all duration-300 ease-fluid hover:bg-white/[0.07] ${
-                active ? "" : "opacity-50"
+                active ? "" : "opacity-65"
               }`}
             >
               <div className="flex items-center justify-between">
@@ -176,7 +225,7 @@ export default function SoundSelection() {
                         removeSound(sound.id);
                       }}
                       aria-label={`Remove ${sound.name}`}
-                      className="text-[13px] text-white/30 transition-all duration-200 hover:scale-125 hover:text-white/70 active:scale-90"
+                      className="text-[13px] text-white/45 transition-all duration-200 hover:scale-125 hover:text-white/80 active:scale-90"
                     >
                       ×
                     </button>
@@ -184,12 +233,34 @@ export default function SoundSelection() {
                   <div onClick={(e) => e.stopPropagation()}>
                     <Toggle
                       checked={sound.enabled}
-                      onChange={() => toggleSound(sound.id)}
+                      onChange={() => handleToggleSound(sound)}
                       label={sound.name}
                     />
                   </div>
                 </div>
               </div>
+
+              {sound.id === NAME_CALL_SOUND_ID && !userName.trim() && (
+                <p className="mt-2 text-[9px] font-normal leading-snug text-auri-muted">
+                  {nameCallNotice ? (
+                    <>
+                      needs your name first —{" "}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push("/customize");
+                        }}
+                        className="font-bold text-auri-highlight underline decoration-auri-highlight/40 underline-offset-2 transition-colors duration-200 hover:text-white"
+                      >
+                        go to customize and enter it
+                      </button>
+                    </>
+                  ) : (
+                    "won't activate until you add your name in customize"
+                  )}
+                </p>
+              )}
 
               <div className="mt-2 flex items-center justify-between">
                 <span
@@ -239,8 +310,11 @@ export default function SoundSelection() {
                 style={{
                   backgroundColor: CLASSIFICATION_META[c].color,
                   color: CLASSIFICATION_META[c].textColor,
-                  opacity: newClassification === c ? 1 : 0.4,
-                  boxShadow: `0 0 10px -1px ${hexToRgba(CLASSIFICATION_META[c].color, 0.6)}`,
+                  opacity: newClassification === c ? 1 : 0.55,
+                  boxShadow:
+                    newClassification === c
+                      ? `0 0 10px -1px ${hexToRgba(CLASSIFICATION_META[c].color, 0.6)}`
+                      : "none",
                 }}
               >
                 <span aria-hidden>{CLASSIFICATION_META[c].icon}</span>
@@ -275,7 +349,7 @@ export default function SoundSelection() {
         <button
           type="button"
           onClick={() => setShowAdd(true)}
-          className="mt-3 flex items-center justify-center gap-1.5 rounded-card border border-dashed border-white/15 py-2.5 text-[11px] font-bold text-white/60 transition-all duration-200 ease-fluid hover:-translate-y-px hover:border-white/30 hover:text-white active:translate-y-0 active:scale-[0.98]"
+          className="mt-3 flex items-center justify-center gap-1.5 rounded-card border border-dashed border-white/20 py-2.5 text-[11px] font-bold text-white/70 transition-all duration-200 ease-fluid hover:-translate-y-px hover:border-white/35 hover:text-white active:translate-y-0 active:scale-[0.98]"
         >
           <span className="text-[13px] leading-none">+</span> add a sound
         </button>
@@ -284,12 +358,13 @@ export default function SoundSelection() {
       {/* double-click edit modal */}
       {editingSound && (
         <div
-          className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 px-5"
+          className="absolute left-0 right-0 z-50 flex items-center justify-center bg-black/70 px-5"
+          style={modalRect ? { top: modalRect.top, height: modalRect.height } : { top: 0, bottom: 0 }}
           onClick={() => setEditingId(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full space-y-3 rounded-card bg-auri-panel px-4 py-4 shadow-lg"
+            className="max-h-[90%] w-full space-y-3 overflow-y-auto rounded-card bg-auri-panel px-4 py-4 shadow-lg"
           >
             <div className="flex items-center justify-between">
               <p className="font-display text-[14px] font-bold text-white">
@@ -413,7 +488,7 @@ export default function SoundSelection() {
                       style={{
                         backgroundColor: cMeta.color,
                         color: cMeta.textColor,
-                        opacity: active ? 1 : 0.4,
+                        opacity: active ? 1 : 0.55,
                         boxShadow: active
                           ? `0 0 10px -1px ${hexToRgba(cMeta.color, 0.6)}`
                           : "none",

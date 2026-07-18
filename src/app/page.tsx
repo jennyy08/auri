@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import BatHero from "../components/BatHero";
 
 export default function Home() {
   const router = useRouter();
@@ -9,9 +10,11 @@ export default function Home() {
     <button
       type="button"
       onClick={() => router.push("/customize")}
-      className="group relative flex h-full w-full flex-col items-center overflow-hidden bg-auri-black px-8 text-left"
+      className="group relative isolate flex h-full w-full flex-col items-center overflow-hidden bg-auri-black px-8 text-left"
       aria-label="Enter auri"
     >
+      <BatHero />
+
       {/* top 1/4 breathing room before the wordmark */}
       <div className="flex-[1]" />
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ScreenHeader from "../../../components/ScreenHeader";
+import BatShadows from "../../../components/BatShadows";
 import { CLASSIFICATION_META, hexToRgba, useAuriStore } from "../../../lib/auri-store";
 
 export default function History() {
@@ -14,7 +15,8 @@ export default function History() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-auri-black px-5 pb-6 pt-8">
+    <div className="relative isolate flex h-full w-full flex-col bg-auri-black px-5 pb-6 pt-8">
+      <BatShadows />
       <div className="flex items-start justify-between gap-3">
         <ScreenHeader title="history" subtitle="recently-detected sounds" />
         {history.length > 0 && (

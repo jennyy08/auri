@@ -209,20 +209,20 @@ export default function EmergencyContact() {
 
       <div className="relative mb-4 flex items-start justify-between gap-3 rounded-card bg-white/5 px-4 py-3 transition-colors duration-300 hover:bg-white/[0.07]">
         <div className="flex-1">
-          <p className="font-display text-[13px] font-bold leading-snug text-white">
+          <p className="font-display text-[11px] font-normal leading-snug text-white/60">
             {pendingActivation ? (
               "fill in a contact below to turn this on — it'll switch back off if nothing's filled in."
             ) : draft.enabled ? (
               <>
-                auri will <span className="text-auri-blush">{methodLabel(draft.method)}</span>{" "}
-                <span className="text-auri-blush">{contactsPhrase(draft.contacts)}</span> if an
+                auri will <span className="font-semibold text-auri-blush">{methodLabel(draft.method)}</span>{" "}
+                <span className="font-semibold text-auri-blush">{contactsPhrase(draft.contacts)}</span> if an
                 emergency sound is detected more than{" "}
                 <input
                   type="number"
                   min={1}
                   value={draft.times}
                   onChange={(e) => patch({ times: Number(e.target.value) })}
-                  className="w-8 rounded bg-white/10 px-1 text-center text-[13px] font-bold text-auri-blush outline-none transition-colors duration-200 focus:bg-white/20"
+                  className="w-8 rounded bg-white/10 px-1 text-center text-[11px] font-semibold text-auri-blush outline-none transition-colors duration-200 focus:bg-white/20"
                 />{" "}
                 times in{" "}
                 <input
@@ -230,7 +230,7 @@ export default function EmergencyContact() {
                   min={1}
                   value={draft.minutes}
                   onChange={(e) => patch({ minutes: Number(e.target.value) })}
-                  className="w-8 rounded bg-white/10 px-1 text-center text-[13px] font-bold text-auri-blush outline-none transition-colors duration-200 focus:bg-white/20"
+                  className="w-8 rounded bg-white/10 px-1 text-center text-[11px] font-semibold text-auri-blush outline-none transition-colors duration-200 focus:bg-white/20"
                 />{" "}
                 minutes.
               </>
@@ -361,7 +361,7 @@ export default function EmergencyContact() {
           <button
             type="button"
             onClick={addContactRow}
-            className="flex w-full items-center justify-center gap-1.5 rounded-card border border-dashed border-white/15 py-2 text-[11px] font-bold text-white/60 transition-all duration-200 ease-fluid hover:-translate-y-px hover:border-white/30 hover:text-white active:translate-y-0 active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-1.5 rounded-card border border-dashed border-white/20 py-2 text-[11px] font-bold text-white/70 transition-all duration-200 ease-fluid hover:-translate-y-px hover:border-white/35 hover:text-white active:translate-y-0 active:scale-[0.98]"
           >
             <span className="text-[13px] leading-none">+</span> add another contact
           </button>
