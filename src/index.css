@@ -1,0 +1,27 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-neutral-950 font-body text-white;
+  /* the app "desk" behind the phone — keeps the phone from feeling like it's
+     floating on pure white/black nothingness */
+  background: radial-gradient(circle at 50% 20%, #17171b 0%, #050505 70%);
+}
+
+/* hide scrollbars inside the phone screen without disabling scroll */
+.phone-scroll::-webkit-scrollbar {
+  display: none;
+}
+.phone-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
