@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import BatShadows from "../components/BatShadows";
 
 export default function Home() {
   const router = useRouter();
@@ -13,8 +12,6 @@ export default function Home() {
       className="group relative flex h-full w-full flex-col items-center overflow-hidden bg-auri-black px-8 text-left"
       aria-label="Enter auri"
     >
-      <BatShadows />
-
       {/* top 1/4 breathing room before the wordmark */}
       <div className="flex-[1]" />
 

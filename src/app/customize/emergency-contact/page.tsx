@@ -91,7 +91,7 @@ export default function EmergencyContact() {
 
   function sendTestAlert() {
     if (!primary) return;
-    const message = `this is a test alert from auri — an urgent sound was detected ${draft.times}+ times in ${draft.minutes} minutes.`;
+    const message = `this is a test alert from auri — an emergency sound was detected ${draft.times}+ times in ${draft.minutes} minutes.`;
     logDetection("smoke-alarm", "home");
     setJustTested(true);
     setTimeout(() => setJustTested(false), 2500);
@@ -112,7 +112,7 @@ export default function EmergencyContact() {
 
       <ScreenHeader
         title="emergency contact"
-        subtitle="automatically notify a trusted contact if an urgent sound is detected more than once"
+        subtitle="automatically notify a trusted contact if an emergency sound is detected more than once"
       />
 
       <div className="relative mb-4 flex items-start justify-between gap-3 rounded-card bg-white/5 px-4 py-3 transition-colors duration-300 hover:bg-white/[0.07]">
@@ -122,7 +122,7 @@ export default function EmergencyContact() {
               <>
                 auri will <span className="text-auri-blush">{methodLabel(draft.method)}</span>{" "}
                 <span className="text-auri-blush">{contactsPhrase(draft.contacts)}</span> if an
-                urgent sound is detected more than{" "}
+                emergency sound is detected more than{" "}
                 <input
                   type="number"
                   min={1}

@@ -17,7 +17,7 @@ import {
   type SoundDef,
 } from "../../../lib/auri-store";
 
-const NOTIFY_LEVELS: NotifyLevel[] = ["all", "urgent-medium", "urgent-only"];
+const NOTIFY_LEVELS: NotifyLevel[] = ["all", "emergency-important", "emergency-only"];
 
 export default function SoundSelection() {
   const {
@@ -36,14 +36,14 @@ export default function SoundSelection() {
 
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newClassification, setNewClassification] = useState<Classification>("medium");
+  const [newClassification, setNewClassification] = useState<Classification>("important");
   const [editingId, setEditingId] = useState<string | null>(null);
 
   function handleAddSound() {
     if (!newName.trim()) return;
     addSound(newName, newClassification);
     setNewName("");
-    setNewClassification("medium");
+    setNewClassification("important");
     setShowAdd(false);
   }
 
@@ -72,7 +72,9 @@ export default function SoundSelection() {
               key={level}
               type="button"
               onClick={() => setNotifyLevel(level)}
-              className={`rounded-full px-2.5 py-1 text-[10px] font-normal transition-all duration-200 ease-fluid hover:-translate-y-px active:translate-y-0 active:scale-95 ${
+              className={`flex-1 rounded-lg px-2 py-1.5 text-center leading-tight transition-all duration-200 ease-fluid hover:-translate-y-px active:translate-y-0 active:scale-95 ${
+                level === "emergency-important" ? "text-[8.5px]" : "text-[10px]"
+              } font-normal ${
                 notifyLevel === level
                   ? "bg-white text-auri-black shadow-[0_0_0_3px_rgba(255,255,255,0.08)]"
                   : "bg-white/10 text-white/70 hover:bg-white/15"
@@ -108,7 +110,7 @@ export default function SoundSelection() {
                   setEditingId(sound.id);
                 }
               }}
-              style={{ boxShadow: `0 0 30px -14px ${hexToRgba(sound.color, 0.5)}` }}
+              style={{ boxShadow: `0 0 20px -16px ${hexToRgba(sound.color, 0.15)}` }}
               className={`cursor-pointer rounded-card bg-white/5 px-4 py-3 transition-all duration-300 ease-fluid hover:bg-white/[0.07] ${
                 active ? "" : "opacity-50"
               }`}
@@ -162,8 +164,9 @@ export default function SoundSelection() {
                     color: meta.textColor,
                     boxShadow: `0 0 10px -1px ${hexToRgba(meta.color, 0.6)}`,
                   }}
-                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide transition-transform duration-200 ease-spring hover:scale-110 active:scale-95"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide transition-transform duration-200 ease-spring hover:scale-110 active:scale-95"
                 >
+                  <span aria-hidden>{meta.icon}</span>
                   {meta.label}
                 </button>
                 <span className="text-[9px] font-normal capitalize text-white/40">
@@ -190,7 +193,7 @@ export default function SoundSelection() {
           />
 
           <label className="block text-[10px] font-bold text-auri-muted">
-            classification
+            urgency level
           </label>
           <div className="flex gap-1.5">
             {CLASSIFICATIONS.map((c) => (
@@ -198,7 +201,7 @@ export default function SoundSelection() {
                 key={c}
                 type="button"
                 onClick={() => setNewClassification(c)}
-                className="rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide transition-all duration-200 ease-fluid hover:scale-105"
+                className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide transition-all duration-200 ease-fluid hover:scale-105"
                 style={{
                   backgroundColor: CLASSIFICATION_META[c].color,
                   color: CLASSIFICATION_META[c].textColor,
@@ -206,10 +209,16 @@ export default function SoundSelection() {
                   boxShadow: `0 0 10px -1px ${hexToRgba(CLASSIFICATION_META[c].color, 0.6)}`,
                 }}
               >
+                <span aria-hidden>{CLASSIFICATION_META[c].icon}</span>
                 {CLASSIFICATION_META[c].label}
               </button>
             ))}
           </div>
+          <p className="text-[9px] font-normal leading-snug text-auri-muted">
+            {CLASSIFICATION_META[newClassification].icon}{" "}
+            {CLASSIFICATION_META[newClassification].label} —{" "}
+            {CLASSIFICATION_META[newClassification].experience}
+          </p>
 
           <div className="flex gap-2 pt-1">
             <button

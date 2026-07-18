@@ -87,8 +87,9 @@ export default function History() {
                         color: meta.textColor,
                         boxShadow: `0 0 8px -1px ${hexToRgba(meta.color, 0.6)}`,
                       }}
-                      className="rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide"
+                      className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide"
                     >
+                      <span aria-hidden>{meta.icon}</span>
                       {meta.label}
                     </span>
                   )}

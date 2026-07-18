@@ -14,17 +14,49 @@ import {
 /*  types                                                              */
 /* ------------------------------------------------------------------ */
 
-export type Classification = "urgent" | "medium" | "low";
+export type Classification = "emergency" | "important" | "informational";
 
-export const CLASSIFICATIONS: Classification[] = ["urgent", "medium", "low"];
+export const CLASSIFICATIONS: Classification[] = [
+  "emergency",
+  "important",
+  "informational",
+];
 
 export const CLASSIFICATION_META: Record<
   Classification,
-  { label: string; color: string; textColor: string }
+  {
+    label: string;
+    icon: string;
+    color: string;
+    textColor: string;
+    examples: string;
+    experience: string;
+  }
 > = {
-  urgent: { label: "urgent", color: "#e0776d", textColor: "#2a0d0a" },
-  medium: { label: "medium", color: "#e8c05f", textColor: "#2a2005" },
-  low: { label: "low priority", color: "#6b6b76", textColor: "#ffffff" },
+  emergency: {
+    label: "emergency",
+    icon: "🚨",
+    color: "#e0776d",
+    textColor: "#2a0d0a",
+    examples: "smoke alarm, fire alarm, CO alarm",
+    experience: "strong continuous vibration + flashing red LED",
+  },
+  important: {
+    label: "important",
+    icon: "⚠️",
+    color: "#e8c05f",
+    textColor: "#2a2005",
+    examples: "door knock, name called, baby crying",
+    experience: "distinct vibration pattern",
+  },
+  informational: {
+    label: "informational",
+    icon: "ℹ️",
+    color: "#5eb8e0",
+    textColor: "#04222c",
+    examples: "microwave done, washing machine finished",
+    experience: "gentle short pulse",
+  },
 };
 
 export type VibrationStrength = "light" | "medium" | "strong";
@@ -71,20 +103,20 @@ export interface SoundDef {
   custom?: boolean;
 }
 
-export type NotifyLevel = "all" | "urgent-medium" | "urgent-only";
+export type NotifyLevel = "all" | "emergency-important" | "emergency-only";
 
 export const NOTIFY_LEVEL_META: Record<
   NotifyLevel,
   { label: string; blurb: string }
 > = {
   all: { label: "all sounds", blurb: "notify for every enabled sound" },
-  "urgent-medium": {
-    label: "urgent & medium",
-    blurb: "only notify for urgent & medium sounds",
+  "emergency-important": {
+    label: "emergency & important",
+    blurb: "only notify for emergency & important sounds",
   },
-  "urgent-only": {
-    label: "urgent only",
-    blurb: "only notify for urgent sounds",
+  "emergency-only": {
+    label: "emergency only",
+    blurb: "only notify for emergency sounds",
   },
 };
 
@@ -134,12 +166,12 @@ interface AuriState {
 /* ------------------------------------------------------------------ */
 
 const DEFAULT_SOUNDS: SoundDef[] = [
-  { id: "baby-crying", name: "baby crying", enabled: true, classification: "urgent", color: "#e0776d", vibrationStrength: "strong", vibrationSpeed: "fast" },
-  { id: "dog-bark", name: "dog bark", enabled: true, classification: "medium", color: "#e8c05f", vibrationStrength: "medium", vibrationSpeed: "medium" },
-  { id: "door-knock", name: "door knock", enabled: true, classification: "medium", color: "#6faa6a", vibrationStrength: "medium", vibrationSpeed: "slow" },
-  { id: "smoke-alarm", name: "smoke alarm", enabled: true, classification: "urgent", color: "#e0776d", vibrationStrength: "strong", vibrationSpeed: "fast" },
-  { id: "car-horn", name: "car horn", enabled: false, classification: "low", color: "#f5f5f2", vibrationStrength: "light", vibrationSpeed: "fast" },
-  { id: "bicycle-bell", name: "bicycle bell", enabled: true, classification: "low", color: "#5eb8e0", vibrationStrength: "light", vibrationSpeed: "medium" },
+  { id: "baby-crying", name: "baby crying", enabled: true, classification: "important", color: "#e0776d", vibrationStrength: "medium", vibrationSpeed: "fast" },
+  { id: "dog-bark", name: "dog bark", enabled: true, classification: "important", color: "#e8c05f", vibrationStrength: "medium", vibrationSpeed: "medium" },
+  { id: "door-knock", name: "door knock", enabled: true, classification: "important", color: "#6faa6a", vibrationStrength: "medium", vibrationSpeed: "slow" },
+  { id: "smoke-alarm", name: "smoke alarm", enabled: true, classification: "emergency", color: "#e0776d", vibrationStrength: "strong", vibrationSpeed: "fast" },
+  { id: "car-horn", name: "car horn", enabled: false, classification: "informational", color: "#f5f5f2", vibrationStrength: "light", vibrationSpeed: "slow" },
+  { id: "bicycle-bell", name: "bicycle bell", enabled: true, classification: "informational", color: "#5eb8e0", vibrationStrength: "light", vibrationSpeed: "slow" },
 ];
 
 const DEFAULT_SPACES: Space[] = [
@@ -178,11 +210,44 @@ const DEFAULT_STATE: AuriState = {
   lights: true,
 };
 
-const STORAGE_KEY = "auri-state-v1";
+const STORAGE_KEY = "auri-state-v2";
 
 // accent colors cycled through for newly-added custom sounds — constrained
 // to the same 5 colors the physical LED can actually display
 const CUSTOM_COLOR_PALETTE = SOUND_COLOR_PRESETS;
+
+// maps saves from the old urgent/medium/low scheme onto the new
+// emergency/important/informational urgency levels
+const LEGACY_CLASSIFICATION_MAP: Record<string, Classification> = {
+  urgent: "emergency",
+  medium: "important",
+  low: "informational",
+};
+
+const LEGACY_NOTIFY_LEVEL_MAP: Record<string, NotifyLevel> = {
+  "urgent-medium": "emergency-important",
+  "urgent-only": "emergency-only",
+};
+
+function migrateClassification(value: unknown): Classification {
+  if (typeof value === "string" && CLASSIFICATIONS.includes(value as Classification)) {
+    return value as Classification;
+  }
+  if (typeof value === "string" && LEGACY_CLASSIFICATION_MAP[value]) {
+    return LEGACY_CLASSIFICATION_MAP[value];
+  }
+  return "important";
+}
+
+function migrateNotifyLevel(value: unknown): NotifyLevel {
+  if (value === "all" || value === "emergency-important" || value === "emergency-only") {
+    return value;
+  }
+  if (typeof value === "string" && LEGACY_NOTIFY_LEVEL_MAP[value]) {
+    return LEGACY_NOTIFY_LEVEL_MAP[value];
+  }
+  return "all";
+}
 
 function loadInitialState(): AuriState {
   if (typeof window === "undefined") return DEFAULT_STATE;
@@ -196,9 +261,11 @@ function loadInitialState(): AuriState {
     return {
       ...DEFAULT_STATE,
       ...parsed,
+      notifyLevel: migrateNotifyLevel(parsed.notifyLevel),
       spaces: hasCustom ? spaces : [...spaces, { id: "custom", name: "custom", soundIds: [] }],
       sounds: (parsed.sounds ?? DEFAULT_SOUNDS).map((s: SoundDef) => ({
         ...s,
+        classification: migrateClassification(s.classification),
         vibrationStrength: s.vibrationStrength ?? "medium",
         vibrationSpeed: s.vibrationSpeed ?? "medium",
       })),
@@ -357,8 +424,9 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
     (sound: SoundDef) => {
       if (!sound.enabled) return false;
       if (state.notifyLevel === "all") return true;
-      if (state.notifyLevel === "urgent-medium") return sound.classification !== "low";
-      return sound.classification === "urgent";
+      if (state.notifyLevel === "emergency-important")
+        return sound.classification !== "informational";
+      return sound.classification === "emergency";
     },
     [state.notifyLevel]
   );

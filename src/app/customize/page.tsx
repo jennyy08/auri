@@ -70,7 +70,7 @@ export default function Customize() {
             </span>
           }
         >
-          <p className="mt-2 text-[10px] font-normal leading-snug text-white/70">
+          <p className="mt-2 text-[10px] font-semibold leading-snug text-white/90">
             specify vibration strength &amp; speed
             <br />
             specify LED colors
@@ -88,7 +88,7 @@ export default function Customize() {
           to="/customize/emergency-contact"
           tone="rose"
           title="emergency contact"
-          subtitle="if an urgent sound is repeatedly detected, auri will automatically call or text a trusted contact"
+          subtitle="if an emergency sound is repeatedly detected, auri will automatically call or text a trusted contact"
           trailing={
             <span
               className={`text-[10px] font-normal ${
