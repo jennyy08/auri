@@ -33,17 +33,18 @@ export type VibrationSpeed = "slow" | "medium" | "fast";
 export const VIBRATION_STRENGTHS: VibrationStrength[] = ["light", "medium", "strong"];
 export const VIBRATION_SPEEDS: VibrationSpeed[] = ["slow", "medium", "fast"];
 
-// preset swatches offered in the sound-edit modal
-export const SOUND_COLOR_PRESETS = [
-  "#f2d9ee",
-  "#b9a9d9",
-  "#7c8f86",
-  "#e0776d",
-  "#e8c05f",
-  "#5eb8e0",
-  "#8a8a94",
-  "#3f5457",
+// the physical LED only supports these five colors — presets (and any
+// sound's assigned color) are constrained to this set
+export const LED_COLORS: { name: string; hex: string }[] = [
+  { name: "red", hex: "#e0776d" },
+  { name: "yellow", hex: "#e8c05f" },
+  { name: "green", hex: "#6faa6a" },
+  { name: "blue", hex: "#5eb8e0" },
+  { name: "white", hex: "#f5f5f2" },
 ];
+
+// preset swatches offered in the sound-edit modal
+export const SOUND_COLOR_PRESETS = LED_COLORS.map((c) => c.hex);
 
 export interface SoundDef {
   id: string;
@@ -110,6 +111,8 @@ interface AuriState {
   activeSpaceId: string;
   emergency: EmergencySettings;
   history: HistoryEntry[];
+  haptics: boolean;
+  lights: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -117,11 +120,11 @@ interface AuriState {
 /* ------------------------------------------------------------------ */
 
 const DEFAULT_SOUNDS: SoundDef[] = [
-  { id: "baby-crying", name: "baby crying", enabled: true, classification: "urgent", color: "#f2d9ee", vibrationStrength: "strong", vibrationSpeed: "fast" },
-  { id: "dog-bark", name: "dog bark", enabled: true, classification: "medium", color: "#b9a9d9", vibrationStrength: "medium", vibrationSpeed: "medium" },
-  { id: "door-knock", name: "door knock", enabled: true, classification: "medium", color: "#7c8f86", vibrationStrength: "medium", vibrationSpeed: "slow" },
+  { id: "baby-crying", name: "baby crying", enabled: true, classification: "urgent", color: "#e0776d", vibrationStrength: "strong", vibrationSpeed: "fast" },
+  { id: "dog-bark", name: "dog bark", enabled: true, classification: "medium", color: "#e8c05f", vibrationStrength: "medium", vibrationSpeed: "medium" },
+  { id: "door-knock", name: "door knock", enabled: true, classification: "medium", color: "#6faa6a", vibrationStrength: "medium", vibrationSpeed: "slow" },
   { id: "smoke-alarm", name: "smoke alarm", enabled: true, classification: "urgent", color: "#e0776d", vibrationStrength: "strong", vibrationSpeed: "fast" },
-  { id: "car-horn", name: "car horn", enabled: false, classification: "low", color: "#e8c05f", vibrationStrength: "light", vibrationSpeed: "fast" },
+  { id: "car-horn", name: "car horn", enabled: false, classification: "low", color: "#f5f5f2", vibrationStrength: "light", vibrationSpeed: "fast" },
   { id: "bicycle-bell", name: "bicycle bell", enabled: true, classification: "low", color: "#5eb8e0", vibrationStrength: "light", vibrationSpeed: "medium" },
 ];
 
@@ -157,19 +160,15 @@ const DEFAULT_STATE: AuriState = {
   activeSpaceId: "home",
   emergency: DEFAULT_EMERGENCY,
   history: DEFAULT_HISTORY,
+  haptics: true,
+  lights: true,
 };
 
 const STORAGE_KEY = "auri-state-v1";
 
-// accent colors cycled through for newly-added custom sounds
-const CUSTOM_COLOR_PALETTE = [
-  "#5eb8e0",
-  "#f2d9ee",
-  "#b9a9d9",
-  "#7c8f86",
-  "#e8c05f",
-  "#e0776d",
-];
+// accent colors cycled through for newly-added custom sounds — constrained
+// to the same 5 colors the physical LED can actually display
+const CUSTOM_COLOR_PALETTE = SOUND_COLOR_PRESETS;
 
 function loadInitialState(): AuriState {
   if (typeof window === "undefined") return DEFAULT_STATE;
@@ -232,6 +231,12 @@ interface AuriContextValue {
   addContact: () => void;
   updateContact: (id: string, patch: Partial<EmergencyContactEntry>) => void;
   removeContact: (id: string) => void;
+
+  // device settings
+  haptics: boolean;
+  lights: boolean;
+  setHaptics: (on: boolean) => void;
+  setLights: (on: boolean) => void;
 
   // history
   logDetection: (soundId: string, space: string) => void;
@@ -376,6 +381,14 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, activeSpaceId: spaceId }));
   }, []);
 
+  const setHaptics = useCallback((on: boolean) => {
+    setState((prev) => ({ ...prev, haptics: on }));
+  }, []);
+
+  const setLights = useCallback((on: boolean) => {
+    setState((prev) => ({ ...prev, lights: on }));
+  }, []);
+
   const updateEmergency = useCallback((patch: Partial<EmergencySettings>) => {
     setState((prev) => ({ ...prev, emergency: { ...prev.emergency, ...patch } }));
   }, []);
@@ -443,6 +456,10 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
       activeSpaceId: state.activeSpaceId,
       emergency: state.emergency,
       history: state.history,
+      haptics: state.haptics,
+      lights: state.lights,
+      setHaptics,
+      setLights,
       addSound,
       removeSound,
       toggleSound,
@@ -474,6 +491,8 @@ export function AuriStoreProvider({ children }: { children: ReactNode }) {
       removeSoundFromSpace,
       renameSpace,
       setActiveSpace,
+      setHaptics,
+      setLights,
       updateEmergency,
       saveEmergency,
       addContact,

@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import Toggle from "../../components/Toggle";
 import NavCard from "../../components/NavCard";
 import { NOTIFY_LEVEL_META, useAuriStore } from "../../lib/auri-store";
 
 export default function Customize() {
-  const [haptics, setHaptics] = useState(true);
-  const [lights, setLights] = useState(true);
-  const { notifyLevel, emergency, spaces, activeSpaceId } = useAuriStore();
+  const {
+    haptics,
+    setHaptics,
+    lights,
+    setLights,
+    notifyLevel,
+    emergency,
+    spaces,
+    activeSpaceId,
+  } = useAuriStore();
   const activeSpaceName =
     spaces.find((s) => s.id === activeSpaceId)?.name || "home";
 
@@ -19,7 +25,7 @@ export default function Customize() {
       </h1>
 
       <div className="mt-4 space-y-3">
-        <div className="flex items-start gap-2.5">
+        <div className="group flex items-start gap-2.5 rounded-card px-2 py-1.5 -mx-2 transition-colors duration-200 hover:bg-white/5">
           <Toggle checked={haptics} onChange={setHaptics} label="Haptics" />
           <div>
             <p className="font-display text-[12px] font-bold text-white">
@@ -31,7 +37,7 @@ export default function Customize() {
           </div>
         </div>
 
-        <div className="flex items-start gap-2.5">
+        <div className="group flex items-start gap-2.5 rounded-card px-2 py-1.5 -mx-2 transition-colors duration-200 hover:bg-white/5">
           <Toggle checked={lights} onChange={setLights} label="Lights" />
           <div>
             <p className="font-display text-[12px] font-bold text-white">

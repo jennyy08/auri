@@ -47,14 +47,14 @@ export default function TargetSpaces() {
                   setActiveSpace(space.id);
                 }
               }}
-              className={`cursor-pointer rounded-card px-4 py-3 text-left transition-colors ${
+              className={`cursor-pointer rounded-card px-4 py-3 text-left transition-all duration-300 ease-fluid hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] ${
                 isActive
                   ? isCustom
                     ? "bg-auri-lilac/40 ring-2 ring-auri-highlight"
                     : "bg-auri-teal ring-2 ring-auri-highlight"
                   : isCustom
-                    ? "bg-white/5"
-                    : "bg-auri-teal/50"
+                    ? "bg-white/5 hover:bg-white/[0.08]"
+                    : "bg-auri-teal/50 hover:bg-auri-teal/70"
               }`}
             >
               {isCustom ? (
@@ -106,7 +106,7 @@ export default function TargetSpaces() {
                           addSoundToSpace(space.id, sound.id);
                           setPickerFor(null);
                         }}
-                        className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-medium text-white transition-colors hover:bg-white/25"
+                        className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-medium text-white transition-all duration-200 ease-fluid hover:-translate-y-px hover:bg-white/25 active:translate-y-0 active:scale-95"
                       >
                         <span
                           className="h-1.5 w-1.5 rounded-full"

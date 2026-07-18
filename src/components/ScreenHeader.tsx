@@ -16,7 +16,7 @@ export default function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
         type="button"
         onClick={() => router.back()}
         aria-label="Back"
-        className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/5 text-[13px] text-white/70 transition-colors hover:bg-white/10"
+        className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/5 text-[13px] text-white/70 transition-all duration-200 ease-fluid hover:-translate-x-0.5 hover:bg-white/10 hover:text-white active:scale-90"
       >
         ←
       </button>

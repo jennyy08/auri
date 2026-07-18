@@ -53,6 +53,16 @@ export default function EmergencyContact() {
     setDraft((prev) => ({ ...prev, ...update }));
   }
 
+  // the enabled switch is a live control, not a draft field — it commits to
+  // the shared store the moment it's flipped, so the customize page's
+  // "on/off" label and every other screen stay in sync immediately, and
+  // turning it off actually turns it off instead of waiting on "save"
+  function handleToggleEnabled(next: boolean) {
+    setJustSaved(false);
+    setDraft((prev) => ({ ...prev, enabled: next }));
+    saveEmergency({ enabled: next });
+  }
+
   function updateContact(id: string, update: Partial<EmergencyContactEntry>) {
     patch({
       contacts: draft.contacts.map((c) => (c.id === id ? { ...c, ...update } : c)),
@@ -99,7 +109,7 @@ export default function EmergencyContact() {
         subtitle="automatically notify a trusted contact if an urgent sound is detected more than once"
       />
 
-      <div className="mb-4 flex items-start justify-between gap-3 rounded-card bg-white/5 px-4 py-3">
+      <div className="mb-4 flex items-start justify-between gap-3 rounded-card bg-white/5 px-4 py-3 transition-colors duration-300 hover:bg-white/[0.07]">
         <div className="flex-1">
           <p className="font-display text-[13px] font-bold leading-snug text-white">
             {draft.enabled ? (
@@ -112,7 +122,7 @@ export default function EmergencyContact() {
                   min={1}
                   value={draft.times}
                   onChange={(e) => patch({ times: Number(e.target.value) })}
-                  className="w-8 rounded bg-white/10 px-1 text-center text-[13px] font-bold text-auri-blush outline-none"
+                  className="w-8 rounded bg-white/10 px-1 text-center text-[13px] font-bold text-auri-blush outline-none transition-colors duration-200 focus:bg-white/20"
                 />{" "}
                 times in{" "}
                 <input
@@ -120,7 +130,7 @@ export default function EmergencyContact() {
                   min={1}
                   value={draft.minutes}
                   onChange={(e) => patch({ minutes: Number(e.target.value) })}
-                  className="w-8 rounded bg-white/10 px-1 text-center text-[13px] font-bold text-auri-blush outline-none"
+                  className="w-8 rounded bg-white/10 px-1 text-center text-[13px] font-bold text-auri-blush outline-none transition-colors duration-200 focus:bg-white/20"
                 />{" "}
                 minutes.
               </>
@@ -131,12 +141,16 @@ export default function EmergencyContact() {
         </div>
         <Toggle
           checked={draft.enabled}
-          onChange={(v) => patch({ enabled: v })}
+          onChange={handleToggleEnabled}
           label="Emergency contact enabled"
         />
       </div>
 
-      <div className={`space-y-4 ${draft.enabled ? "" : "pointer-events-none opacity-40"}`}>
+      <div
+        className={`space-y-4 transition-all duration-300 ease-out ${
+          draft.enabled ? "opacity-100" : "pointer-events-none scale-[0.99] opacity-40"
+        }`}
+      >
         <div>
           <p className="mb-1.5 text-[10px] font-bold text-auri-muted">
             contact method
@@ -147,10 +161,10 @@ export default function EmergencyContact() {
                 key={m}
                 type="button"
                 onClick={() => patch({ method: m })}
-                className={`rounded-full px-3 py-1 text-[10px] font-normal transition-colors ${
+                className={`rounded-full px-3 py-1 text-[10px] font-normal transition-all duration-200 ease-fluid hover:-translate-y-px active:translate-y-0 active:scale-95 ${
                   draft.method === m
-                    ? "bg-white text-auri-black"
-                    : "bg-white/10 text-white/70"
+                    ? "bg-white text-auri-black shadow-[0_0_0_3px_rgba(255,255,255,0.08)]"
+                    : "bg-white/10 text-white/70 hover:bg-white/15"
                 }`}
               >
                 {m}
@@ -161,7 +175,10 @@ export default function EmergencyContact() {
 
         <div className="space-y-3">
           {draft.contacts.map((contact, i) => (
-            <div key={contact.id} className="rounded-card bg-white/5 px-3 py-2.5">
+            <div
+              key={contact.id}
+              className="rounded-card bg-white/5 px-3 py-2.5 transition-colors duration-300 hover:bg-white/[0.07]"
+            >
               <div className="flex items-end gap-2.5">
                 <div className="flex-1">
                   <label className="mb-1 block text-[10px] font-bold text-auri-muted">
@@ -170,7 +187,7 @@ export default function EmergencyContact() {
                   <input
                     value={contact.name}
                     onChange={(e) => updateContact(contact.id, { name: e.target.value })}
-                    className="w-full rounded-lg bg-white/10 px-2.5 py-1.5 text-[12px] font-normal text-white outline-none placeholder:text-white/30"
+                    className="w-full rounded-lg bg-white/10 px-2.5 py-1.5 text-[12px] font-normal text-white outline-none placeholder:text-white/30 transition-colors duration-200 focus:bg-white/[0.14]"
                     placeholder="name"
                   />
                 </div>
@@ -181,7 +198,7 @@ export default function EmergencyContact() {
                   <input
                     value={contact.number}
                     onChange={(e) => updateContact(contact.id, { number: e.target.value })}
-                    className="w-full rounded-lg bg-white/10 px-2.5 py-1.5 text-[12px] font-normal text-white outline-none placeholder:text-white/30"
+                    className="w-full rounded-lg bg-white/10 px-2.5 py-1.5 text-[12px] font-normal text-white outline-none placeholder:text-white/30 transition-colors duration-200 focus:bg-white/[0.14]"
                     placeholder="000-0000"
                   />
                 </div>
@@ -190,7 +207,7 @@ export default function EmergencyContact() {
                     type="button"
                     onClick={() => removeContactRow(contact.id)}
                     aria-label={`Remove contact ${i + 1}`}
-                    className="mb-1.5 text-[13px] text-white/30 hover:text-white/70"
+                    className="mb-1.5 text-[13px] text-white/30 transition-all duration-200 hover:scale-125 hover:text-white/70 active:scale-90"
                   >
                     ×
                   </button>
@@ -201,7 +218,7 @@ export default function EmergencyContact() {
                 <div className="mt-2 flex gap-2">
                   <a
                     href={telHref(contact.number)}
-                    className="flex-1 rounded-full bg-white/10 py-1 text-center text-[10px] font-bold text-white/80 transition-colors hover:bg-white/20"
+                    className="flex-1 rounded-full bg-white/10 py-1 text-center text-[10px] font-bold text-white/80 transition-all duration-200 ease-fluid hover:-translate-y-px hover:bg-white/20 active:translate-y-0 active:scale-95"
                   >
                     call now
                   </a>
@@ -210,7 +227,7 @@ export default function EmergencyContact() {
                       contact.number,
                       `this is a test alert from auri — checking that ${contact.name.trim()} can be reached.`
                     )}
-                    className="flex-1 rounded-full bg-white/10 py-1 text-center text-[10px] font-bold text-white/80 transition-colors hover:bg-white/20"
+                    className="flex-1 rounded-full bg-white/10 py-1 text-center text-[10px] font-bold text-white/80 transition-all duration-200 ease-fluid hover:-translate-y-px hover:bg-white/20 active:translate-y-0 active:scale-95"
                   >
                     text now
                   </a>
@@ -222,7 +239,7 @@ export default function EmergencyContact() {
           <button
             type="button"
             onClick={addContactRow}
-            className="flex w-full items-center justify-center gap-1.5 rounded-card border border-dashed border-white/15 py-2 text-[11px] font-bold text-white/60 transition-colors hover:border-white/30 hover:text-white"
+            className="flex w-full items-center justify-center gap-1.5 rounded-card border border-dashed border-white/15 py-2 text-[11px] font-bold text-white/60 transition-all duration-200 ease-fluid hover:-translate-y-px hover:border-white/30 hover:text-white active:translate-y-0 active:scale-[0.98]"
           >
             <span className="text-[13px] leading-none">+</span> add another contact
           </button>
@@ -233,7 +250,11 @@ export default function EmergencyContact() {
         <button
           type="button"
           onClick={handleSave}
-          className="w-full rounded-full bg-white py-2 text-[12px] font-bold text-auri-black transition-opacity"
+          className={`w-full rounded-full py-2 text-[12px] font-bold transition-all duration-200 ease-fluid hover:-translate-y-px active:translate-y-0 active:scale-[0.97] ${
+            justSaved
+              ? "bg-auri-highlight text-auri-black"
+              : "bg-white text-auri-black hover:shadow-[0_4px_20px_-4px_rgba(255,255,255,0.35)]"
+          }`}
         >
           {justSaved ? "saved ✓" : "save"}
         </button>
@@ -242,7 +263,7 @@ export default function EmergencyContact() {
           type="button"
           onClick={sendTestAlert}
           disabled={!draft.enabled || !primary}
-          className="w-full rounded-full bg-white/10 py-2 text-[12px] font-bold text-white/80 transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-full bg-white/10 py-2 text-[12px] font-bold text-white/80 transition-all duration-200 ease-fluid hover:-translate-y-px hover:bg-white/20 active:translate-y-0 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:translate-y-0"
         >
           {justTested ? "test alert sent ✓" : "send test alert now"}
         </button>

@@ -6,8 +6,8 @@ import Toggle from "../../../components/Toggle";
 import {
   CLASSIFICATIONS,
   CLASSIFICATION_META,
+  LED_COLORS,
   NOTIFY_LEVEL_META,
-  SOUND_COLOR_PRESETS,
   VIBRATION_SPEEDS,
   VIBRATION_STRENGTHS,
   useAuriStore,
@@ -29,6 +29,8 @@ export default function SoundSelection() {
     addSound,
     removeSound,
     willNotify,
+    haptics,
+    lights,
   } = useAuriStore();
 
   const [showAdd, setShowAdd] = useState(false);
@@ -69,10 +71,10 @@ export default function SoundSelection() {
               key={level}
               type="button"
               onClick={() => setNotifyLevel(level)}
-              className={`rounded-full px-2.5 py-1 text-[10px] font-normal transition-colors ${
+              className={`rounded-full px-2.5 py-1 text-[10px] font-normal transition-all duration-200 ease-fluid hover:-translate-y-px active:translate-y-0 active:scale-95 ${
                 notifyLevel === level
-                  ? "bg-white text-auri-black"
-                  : "bg-white/10 text-white/70"
+                  ? "bg-white text-auri-black shadow-[0_0_0_3px_rgba(255,255,255,0.08)]"
+                  : "bg-white/10 text-white/70 hover:bg-white/15"
               }`}
             >
               {NOTIFY_LEVEL_META[level].label}
@@ -86,7 +88,7 @@ export default function SoundSelection() {
       </div>
 
       <p className="mb-2 text-[9px] font-normal text-auri-muted">
-        double-tap a sound to edit its vibration &amp; color
+        tap a sound to edit its vibration &amp; color
       </p>
 
       <div className="space-y-2.5">
@@ -96,8 +98,16 @@ export default function SoundSelection() {
           return (
             <div
               key={sound.id}
-              onDoubleClick={() => setEditingId(sound.id)}
-              className={`rounded-card bg-white/5 px-4 py-3 transition-opacity ${
+              onClick={() => setEditingId(sound.id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setEditingId(sound.id);
+                }
+              }}
+              className={`cursor-pointer rounded-card bg-white/5 px-4 py-3 transition-all duration-300 ease-fluid hover:bg-white/[0.07] ${
                 active ? "" : "opacity-50"
               }`}
             >
@@ -115,28 +125,34 @@ export default function SoundSelection() {
                   {sound.custom && (
                     <button
                       type="button"
-                      onClick={() => removeSound(sound.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeSound(sound.id);
+                      }}
                       aria-label={`Remove ${sound.name}`}
-                      className="text-[13px] text-white/30 hover:text-white/70"
+                      className="text-[13px] text-white/30 transition-all duration-200 hover:scale-125 hover:text-white/70 active:scale-90"
                     >
                       ×
                     </button>
                   )}
-                  <Toggle
-                    checked={sound.enabled}
-                    onChange={() => toggleSound(sound.id)}
-                    label={sound.name}
-                  />
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Toggle
+                      checked={sound.enabled}
+                      onChange={() => toggleSound(sound.id)}
+                      label={sound.name}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="mt-2 flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() =>
-                    setSoundClassification(sound.id, cycleClassification(sound.classification))
-                  }
-                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSoundClassification(sound.id, cycleClassification(sound.classification));
+                  }}
+                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide transition-transform duration-200 ease-spring hover:scale-110 active:scale-95"
                   style={{ backgroundColor: meta.color, color: meta.textColor }}
                 >
                   {meta.label}
@@ -173,7 +189,7 @@ export default function SoundSelection() {
                 key={c}
                 type="button"
                 onClick={() => setNewClassification(c)}
-                className="rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide transition-opacity"
+                className="rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide transition-all duration-200 ease-fluid hover:scale-105"
                 style={{
                   backgroundColor: CLASSIFICATION_META[c].color,
                   color: CLASSIFICATION_META[c].textColor,
@@ -189,14 +205,14 @@ export default function SoundSelection() {
             <button
               type="button"
               onClick={handleAddSound}
-              className="flex-1 rounded-full bg-white py-1.5 text-[11px] font-bold text-auri-black"
+              className="flex-1 rounded-full bg-white py-1.5 text-[11px] font-bold text-auri-black transition-all duration-200 ease-fluid hover:-translate-y-px hover:shadow-[0_4px_16px_-4px_rgba(255,255,255,0.35)] active:translate-y-0 active:scale-95"
             >
               add sound
             </button>
             <button
               type="button"
               onClick={() => setShowAdd(false)}
-              className="flex-1 rounded-full bg-white/10 py-1.5 text-[11px] font-bold text-white/70"
+              className="flex-1 rounded-full bg-white/10 py-1.5 text-[11px] font-bold text-white/70 transition-all duration-200 ease-fluid hover:-translate-y-px hover:bg-white/20 active:translate-y-0 active:scale-95"
             >
               cancel
             </button>
@@ -206,7 +222,7 @@ export default function SoundSelection() {
         <button
           type="button"
           onClick={() => setShowAdd(true)}
-          className="mt-3 flex items-center justify-center gap-1.5 rounded-card border border-dashed border-white/15 py-2.5 text-[11px] font-bold text-white/60 transition-colors hover:border-white/30 hover:text-white"
+          className="mt-3 flex items-center justify-center gap-1.5 rounded-card border border-dashed border-white/15 py-2.5 text-[11px] font-bold text-white/60 transition-all duration-200 ease-fluid hover:-translate-y-px hover:border-white/30 hover:text-white active:translate-y-0 active:scale-[0.98]"
         >
           <span className="text-[13px] leading-none">+</span> add a sound
         </button>
@@ -230,31 +246,51 @@ export default function SoundSelection() {
                 type="button"
                 onClick={() => setEditingId(null)}
                 aria-label="Close"
-                className="text-[15px] text-white/40 hover:text-white/80"
+                className="text-[15px] text-white/40 transition-all duration-200 hover:scale-125 hover:text-white/80 active:scale-90"
               >
                 ×
               </button>
             </div>
 
             <div>
-              <p className="mb-1.5 text-[10px] font-bold text-auri-muted">color</p>
-              <div className="flex flex-wrap gap-2">
-                {SOUND_COLOR_PRESETS.map((color) => (
+              <div className="mb-1.5 flex items-center justify-between">
+                <p className="text-[10px] font-bold text-auri-muted">
+                  led color
+                </p>
+                <p className="text-[8px] font-normal text-auri-muted">
+                  auri's LED supports 5 colors
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {LED_COLORS.map(({ name, hex }) => (
                   <button
-                    key={color}
+                    key={hex}
                     type="button"
-                    aria-label={`Set color ${color}`}
-                    onClick={() => updateSoundSettings(editingSound.id, { color })}
-                    className="h-6 w-6 rounded-full transition-transform"
-                    style={{
-                      backgroundColor: color,
-                      outline:
-                        editingSound.color === color ? "2px solid white" : "2px solid transparent",
-                      outlineOffset: "2px",
-                    }}
-                  />
+                    aria-label={`Set color ${name}`}
+                    onClick={() => updateSoundSettings(editingSound.id, { color: hex })}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <span
+                      className="block h-6 w-6 rounded-full transition-transform duration-200 ease-spring hover:scale-[1.15] active:scale-90"
+                      style={{
+                        backgroundColor: hex,
+                        outline:
+                          editingSound.color === hex ? "2px solid white" : "2px solid transparent",
+                        outlineOffset: "2px",
+                      }}
+                    />
+                    <span className="text-[8px] font-normal capitalize text-white/40">
+                      {name}
+                    </span>
+                  </button>
                 ))}
               </div>
+              {!lights && (
+                <p className="mt-2 text-[9px] font-normal leading-snug text-auri-muted">
+                  lights are turned off in customize — this color won&apos;t show
+                  until you turn them back on.
+                </p>
+              )}
             </div>
 
             <div>
@@ -267,10 +303,10 @@ export default function SoundSelection() {
                     key={strength}
                     type="button"
                     onClick={() => updateSoundSettings(editingSound.id, { vibrationStrength: strength })}
-                    className={`flex-1 rounded-full py-1 text-[10px] font-normal capitalize transition-colors ${
+                    className={`flex-1 rounded-full py-1 text-[10px] font-normal capitalize transition-all duration-200 ease-fluid active:scale-95 ${
                       editingSound.vibrationStrength === strength
-                        ? "bg-white text-auri-black"
-                        : "bg-white/10 text-white/70"
+                        ? "bg-white text-auri-black shadow-[0_0_0_3px_rgba(255,255,255,0.08)]"
+                        : "bg-white/10 text-white/70 hover:bg-white/15"
                     }`}
                   >
                     {strength}
@@ -289,22 +325,28 @@ export default function SoundSelection() {
                     key={speed}
                     type="button"
                     onClick={() => updateSoundSettings(editingSound.id, { vibrationSpeed: speed })}
-                    className={`flex-1 rounded-full py-1 text-[10px] font-normal capitalize transition-colors ${
+                    className={`flex-1 rounded-full py-1 text-[10px] font-normal capitalize transition-all duration-200 ease-fluid active:scale-95 ${
                       editingSound.vibrationSpeed === speed
-                        ? "bg-white text-auri-black"
-                        : "bg-white/10 text-white/70"
+                        ? "bg-white text-auri-black shadow-[0_0_0_3px_rgba(255,255,255,0.08)]"
+                        : "bg-white/10 text-white/70 hover:bg-white/15"
                     }`}
                   >
                     {speed}
                   </button>
                 ))}
               </div>
+              {!haptics && (
+                <p className="mt-2 text-[9px] font-normal leading-snug text-auri-muted">
+                  haptics are turned off in customize — you won&apos;t feel this
+                  vibration until you turn them back on.
+                </p>
+              )}
             </div>
 
             <button
               type="button"
               onClick={() => setEditingId(null)}
-              className="w-full rounded-full bg-white py-1.5 text-[11px] font-bold text-auri-black"
+              className="w-full rounded-full bg-white py-1.5 text-[11px] font-bold text-auri-black transition-all duration-200 ease-fluid hover:-translate-y-px hover:shadow-[0_4px_16px_-4px_rgba(255,255,255,0.35)] active:translate-y-0 active:scale-95"
             >
               done
             </button>

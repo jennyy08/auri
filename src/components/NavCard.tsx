@@ -33,7 +33,7 @@ export default function NavCard({
     <button
       type="button"
       onClick={() => router.push(to)}
-      className={`w-full rounded-card ${TONE_CLASSES[tone]} px-4 py-3 text-left transition-transform duration-150 active:scale-[0.98]`}
+      className={`w-full rounded-card ${TONE_CLASSES[tone]} px-4 py-3 text-left transition-all duration-300 ease-fluid hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)] hover:brightness-110 active:translate-y-0 active:scale-[0.98] active:duration-150`}
     >
       <div className="flex items-center justify-between gap-3">
         <span className="font-display text-[14px] font-bold leading-none text-white">
