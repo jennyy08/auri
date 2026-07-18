@@ -185,50 +185,33 @@ export default function EmergencyContact() {
     setTimeout(() => setJustSaved(false), 2500);
   }
 
-  async function sendTestAlert() {
+  function sendTestAlert() {
     if (!primary || sending) return;
     const message = `this is a test alert from auri — an emergency sound was detected ${draft.times}+ times in ${draft.minutes} minutes.`;
 
     setSending(true);
     setTestFeedback(null);
 
-    try {
-      const res = await fetch("/api/emergency-alert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: primary.number, method: draft.method, message }),
-      });
-      const data = await res.json();
+    // client-only: there's no backend telephony service wired up, so a
+    // test alert logs the detection and hands off to the phone's own
+    // call/text app — the same manual "reach them yourself" shortcut the
+    // call now / text now buttons use.
+    logDetection("smoke-alarm", "home");
+    setJustTested(true);
+    setTestFeedback({
+      kind: "sent",
+      text: `opening your phone's ${methodLabel(draft.method)} app to reach ${primary.name || "your contact"}.`,
+    });
+    setTimeout(() => setJustTested(false), 2500);
 
-      if (!res.ok) throw new Error(data?.error || "the alert service couldn't send it");
-
-      logDetection("smoke-alarm", "home");
-      setJustTested(true);
-      setTestFeedback({
-        kind: "sent",
-        text: `sent for real via Twilio — ${methodLabel(draft.method)} delivered to ${primary.name || "your contact"}.`,
-      });
-      setTimeout(() => setJustTested(false), 2500);
-    } catch (err) {
-      // couldn't send automatically (most likely Twilio isn't configured
-      // in this environment yet) — fall back to opening the phone's own
-      // call/text app so tapping the button still does *something*.
-      logDetection("smoke-alarm", "home");
-      setJustTested(true);
-      setTestFeedback({
-        kind: "error",
-        text: err instanceof Error ? err.message : "the alert service couldn't send it",
-      });
-      setTimeout(() => setJustTested(false), 2500);
-      if (draft.method === "call") {
-        window.location.href = telHref(primary.number);
-      } else {
-        window.location.href = smsHref(primary.number, message);
-      }
-    } finally {
-      setSending(false);
-      setTimeout(() => setTestFeedback(null), 7000);
+    if (draft.method === "call") {
+      window.location.href = telHref(primary.number);
+    } else {
+      window.location.href = smsHref(primary.number, message);
     }
+
+    setSending(false);
+    setTimeout(() => setTestFeedback(null), 7000);
   }
 
   return (
@@ -451,15 +434,13 @@ export default function EmergencyContact() {
               testFeedback.kind === "sent" ? "text-auri-sage" : "text-auri-rose"
             }`}
           >
-            {testFeedback.kind === "sent"
-              ? testFeedback.text
-              : `couldn't send automatically — opened your phone's app instead. (${testFeedback.text})`}
+            {testFeedback.text}
           </p>
         )}
 
         <p className="text-center text-[9px] font-normal leading-snug text-auri-muted">
           {primary
-            ? "\"send test alert\" tries to send a real text/call automatically through your Twilio backend. If Twilio isn't set up yet, it opens your phone's call or messages app instead so you can send it yourself."
+            ? "\"send test alert\" opens your phone's call or messages app so you can reach your contact yourself — the same thing that would happen automatically once the threshold is hit."
             : "add a contact with a name and number to enable real call/text alerts."}
         </p>
       </div>
