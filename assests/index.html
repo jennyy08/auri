@@ -1,0 +1,137 @@
+<!--
+SPDX-FileCopyrightText: Copyright (C) Arduino s.r.l. and/or its affiliated companies
+SPDX-License-Identifier: MPL-2.0
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>auri</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- connection badge, present on every screen -->
+      <span id="connection-status" class="badge status-offline">Offline</span>
+
+      <!-- ============ SCREEN 1: home ============ -->
+      <section id="screen-home" class="screen active">
+        <div class="bats bats-hero" aria-hidden="true">
+          <span class="bat bh-1"></span>
+          <span class="bat bh-2"></span>
+          <span class="bat bh-3"></span>
+          <span class="bat bh-4"></span>
+          <span class="bat bh-5"></span>
+        </div>
+
+        <button type="button" id="enter-btn" class="home-btn" aria-label="Enter auri">
+          <div class="spacer flex-1"></div>
+          <span class="wordmark">auri</span>
+          <div class="spacer flex-1"></div>
+          <img src="assets/logo.png" alt="auri" class="logo-mark" />
+          <span class="tagline">sound &rarr; sensation</span>
+          <div class="spacer flex-1"></div>
+        </button>
+      </section>
+
+      <!-- ============ SCREEN 2: customize hub ============ -->
+      <section id="screen-customize" class="screen">
+        <div class="bats bats-shadow" aria-hidden="true">
+          <span class="bat bs-1"></span>
+          <span class="bat bs-2"></span>
+          <span class="bat bs-3"></span>
+        </div>
+
+        <h1 class="hub-title">
+          <span class="hub-wordmark">auri</span>
+          <span class="hub-tag"><em>feel</em> the aura</span>
+          <span id="status-dot" class="status-dot" title="Listening status"></span>
+        </h1>
+
+        <div class="name-card">
+          <label for="user-name">your name</label>
+          <input id="user-name" type="text" placeholder="e.g. Jordan" autocomplete="off" />
+          <p class="hint">so auri can recognize when your name is called.</p>
+        </div>
+
+        <div class="transcript-card">
+          <div class="transcript-head">
+            <label>live transcript</label>
+            <span id="transcript-live-dot" class="transcript-dot"></span>
+          </div>
+          <div id="transcript-log" class="transcript-log">
+            <p class="transcript-empty">tap listen and say your name</p>
+          </div>
+          <button type="button" id="listen-btn" class="listen-btn">listen</button>
+        </div>
+
+        <div class="sound-card">
+          <div class="sound-head">
+            <label>sound detected</label>
+          </div>
+          <p id="sound-status-text" class="sound-status-text">listening for sounds</p>
+        </div>
+
+        <div class="toggle-rows">
+          <div class="toggle-row">
+            <button type="button" id="toggle-haptics" class="toggle" role="switch" aria-checked="true" aria-label="Haptics">
+              <span class="knob"></span>
+            </button>
+            <div>
+              <p class="row-title">haptics</p>
+              <p class="row-sub">feel personalized vibrations for detected sounds</p>
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <button type="button" id="toggle-lights" class="toggle" role="switch" aria-checked="true" aria-label="Lights">
+              <span class="knob"></span>
+            </button>
+            <div>
+              <p class="row-title">lights</p>
+              <p class="row-sub">receive color-coded LED alerts for detected sounds</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-cards">
+          <button type="button" class="nav-card tone-teal" data-target="target-spaces">
+            <div class="nav-card-row">
+              <span class="nav-title">target space</span>
+              <span id="nav-space-value" class="nav-trailing">home</span>
+            </div>
+            <p class="nav-sub">filter sounds by location</p>
+          </button>
+
+          <button type="button" class="nav-card tone-sage" data-target="sound-selection">
+            <div class="nav-card-row">
+              <span class="nav-title">sound selection</span>
+              <span id="nav-notify-value" class="nav-trailing small">all sounds</span>
+            </div>
+            <p class="nav-sub">choose &amp; classify which sounds auri should detect</p>
+          </button>
+
+          <button type="button" class="nav-card tone-slate" data-target="history">
+            <div class="nav-card-row">
+              <span class="nav-title">history</span>
+            </div>
+            <p class="nav-sub">view recently-detected sounds</p>
+          </button>
+
+          <button type="button" class="nav-card tone-rose" data-target="emergency-contact">
+            <div class="nav-card-row">
+              <span class="nav-title">emergency contact</span>
+              <span id="nav-emergency-value" class="nav-trailing small">on</span>
+            </div>
+            <p class="nav-sub">if an emergency sound is repeatedly detected, auri will automatically call or text a trusted contact</p>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <script src="libs/socket.io.min.js"></script>
+    <script src="libs/arduino.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
