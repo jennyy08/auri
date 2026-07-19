@@ -19,6 +19,8 @@ active_space_name = "home"
 notify_level_label = "all sounds"
 emergency_enabled = True
 
+bridge_lock = threading.Lock()   
+test_mode_active = threading.Event()
 
 def get_audio_status():
     """Get current Audio status for API matching the layout pattern."""
@@ -44,16 +46,25 @@ def get_app_state():
     }
 
 
+# Add near the top, alongside listening_flag
+bridge_lock = threading.Lock()      # serializes all Bridge.call("sound_detected", ...) invocations
+test_mode_active = threading.Event()  # true only while run_sequential_test() is running
+
+
 def on_sound_detected(label):
     """Callback function triggered when the AI model detects a sound."""
     global last_detected
     last_detected = label
     print(f"[AI Event] Detected: {label}")
 
-    # Call a function in the sketch to control physical LEDs/Buzzers on the MCU
-    Bridge.call("sound_detected", label)
+    # Serialize Bridge calls: Bridge.call() matches request/response by
+    # msgid over a single channel and isn't safe to call concurrently from
+    # multiple threads (real detections + test-mode thread). Without this
+    # lock, two overlapping calls can cause one to time out even though
+    # the MCU eventually answers it late (see "Response for unknown msgid").
+    with bridge_lock:
+        Bridge.call("sound_detected", label)
 
-    # Send updated status to all connected clients matching the template channel
     ui.send_message('led_status_update', get_audio_status())
 
 
@@ -128,6 +139,7 @@ def name_listen_session():
         listening_flag.clear()
         ui.send_message('asr_transcript', {"eventType": "session_end", "text": ""})
 
+    
 
 def on_start_listening(client, data):
     if listening_flag.is_set():
@@ -143,6 +155,34 @@ def on_stop_listening(client, data):
         asr.cancel()
 
 
+def on_trigger_test_mode(client, data):
+    if test_mode_active.is_set():
+        return  # already running — ignore duplicate clicks
+    threading.Thread(target=run_sequential_test, daemon=True).start()
+
+
+def run_sequential_test():
+    """
+    Background worker that runs each sound classification one after the other.
+    Pauses between alerts to let the Arduino complete its real-time hardware routines.
+    """
+    test_mode_active.set()
+    try:
+        test_sounds = ["baby", "dog", "traffic", "firetruck"]
+        print("[Test Mode] Initiating sequential hardware test cycle...")
+
+        for index, sound in enumerate(test_sounds):
+            print(f"[Test Mode] [{index + 1}/{len(test_sounds)}] Triggering: {sound.upper()}")
+            on_sound_detected(sound)
+            if index < len(test_sounds) - 1:
+                print(f"[Test Mode] Waiting for hardware to idle before next test...")
+                time.sleep(4.0)
+
+        print("[Test Mode] All sequential test simulations completed successfully.")
+    finally:
+        test_mode_active.clear()
+
+   
 # Initialize WebUI
 ui = WebUI()
 
@@ -153,6 +193,8 @@ ui.on_message('set_haptics', on_set_haptics)
 ui.on_message('set_lights', on_set_lights)
 ui.on_message('start_listening', on_start_listening)
 ui.on_message('stop_listening', on_stop_listening)
+ui.on_message('trigger_test_mode', on_trigger_test_mode)
+
 
 # Initialize Audio Classifier (Strictly zero arguments for the native block)
 spotter = AudioClassification()
@@ -179,10 +221,12 @@ asr = CloudASR(provider=CloudProvider.GOOGLE_SPEECH)
 
 def make_callback(sound_label):
     # NOTE: this brick's on_detect() strictly enforces a zero-argument
-    # callback (raises ValueError("Callback must not accept any arguments.")
-    # otherwise), so confidence/raw audio aren't retrievable here.
-    return lambda: on_sound_detected(sound_label)
-
+    # callback, so confidence/raw audio aren't retrievable here.
+    def _cb():
+        if test_mode_active.is_set():
+            return  # suppress real ambient detections while the synthetic test runs
+        on_sound_detected(sound_label)
+    return _cb
 
 for sound_class in classes:
     spotter.on_detect(sound_class, make_callback(sound_class))
