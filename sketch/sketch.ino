@@ -57,26 +57,34 @@ void handle_sound(String label) {
   lcd.setCursor(0, 0);
   lcd.print("Detected:");
   lcd.setCursor(0, 1);
-  lcd.print(label);
+  
 
   if (label == "name_call") {
     digitalWrite(NAME_LED, HIGH);
     pulseVibro(5, 500);
+    lcd.print("name call");
   }
   else if (label == "baby") {
     digitalWrite(BABY_LED, HIGH);
     pulseVibro(12, 200);
+    lcd.print("smoke detector");
   }
   else if (label == "traffic") {
-    digitalWrite(TRAFFIC_LED, HIGH);
-    pulseVibro(5, 400);
+     lcd.print("waiting");
   }
-  else if (label == "ambulance" || label == "firetruck") {
+
+  else if (label == "dog") {
+    lcd.print("dog");
+  }
+      
+  else if (label == "firetruck") {
     // treated as "emergency" — matches URGENT_SOUNDS in the web UI
+    lcd.print("ambulance");
     digitalWrite(EMERGENCY_LED, HIGH);
     digitalWrite(VIBRO_PIN, HIGH);
     delay(5000);
     digitalWrite(VIBRO_PIN, LOW);
+    
   }
   else {
     Serial.println("Unknown label");
