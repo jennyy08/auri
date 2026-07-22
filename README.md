@@ -62,4 +62,4 @@ Run the Python script in [python/main.py](python/main.py) using the environment 
 - Add real emergency SMS or call automation
 - Support more sound classes
 - Improve the physical prototype and enclosure
-- Make the experience more polished for demos and presentations
+
