@@ -2,6 +2,8 @@
 
 AURI is a hardware-focused project that combines an Arduino Uno Q, a Python sound-detection layer, and a web-based customization interface. The system reacts to important sounds and gives immediate feedback through LEDs, vibration, and an LCD display.
 
+🔗 **[View on Devpost][https://devpost.com](https://devpost.com/software/auri-gvp74e)**
+
 ## What it does
 
 - Detects sounds such as a baby crying, ambulance or firetruck sirens, traffic noise, glass breaking, and a named voice trigger
